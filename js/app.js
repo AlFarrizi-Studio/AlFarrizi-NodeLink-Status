@@ -25,7 +25,7 @@ class NodeLinkMonitor {
             { name: 'YouTube', icon: 'youtube.png' },
             { name: 'YouTube Music', icon: 'youtubemusic.png' },
             { name: 'SoundCloud', icon: 'soundcloud.png' },
-            { name: 'Unified', icon: 'unified.png' },
+            { name: 'URL Stream', icon: 'unified.png' },
             { name: 'Spotify', icon: 'spotify.png' },
             { name: 'Apple Music', icon: 'applemusic.png' },
             { name: 'Deezer', icon: 'deezer.png' },
@@ -497,3 +497,4 @@ document.addEventListener('visibilitychange', () => {
         }
     }
 });
+
