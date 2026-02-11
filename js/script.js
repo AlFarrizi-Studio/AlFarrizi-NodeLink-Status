@@ -76,7 +76,7 @@
         { name: 'Piper TTS', icon: 'piper-tts.png', fallback: '🗣️', color: '#4CAF50' },
         { name: 'Google TTS', icon: 'google-tts.png', fallback: '🔊', color: '#4285F4' },
         { name: 'Flowery TTS', icon: 'flowery-tts.png', fallback: '🌸', color: '#FF69B4' },
-        { name: 'Unified', icon: 'unified.png', fallback: '🔄', color: '#6366F1' }
+        { name: 'URL Stream', icon: 'unified.png', fallback: '🔄', color: '#6366F1' }
     ];
 
     // ============================================
@@ -849,3 +849,4 @@
     };
 
 })();
+
