@@ -1,12 +1,14 @@
 /**
- * Server Monitor Dashboard - Pure WebSocket
- * No Simulation Mode
+ * Server Monitor Dashboard - Non-SSL (ws://)
+ * !!! HANYA BISA DIAKSES SECARA LOKAL (FILE://) !!!
+ * !!! TIDAK AKAN BEKERJA DI NETLIFY (HTTPS) !!!
  */
 
 const CONFIG = {
-    wsUrl: 'wss://nc1.lemonhost.me:8080/api/servers/637e6e35-1ebe-4d0d-8560-7c214ba5123b/ws',
+    // Diubah ke ws:// (Non-Secure)
+    wsUrl: 'ws://nc1.lemonhost.me:8080/api/servers/637e6e35-1ebe-4d0d-8560-7c214ba5123b/ws',
     reconnectInterval: 5000,
-    maxReconnectAttempts: 999,
+    maxReconnectAttempts: 5,
     networkChartPoints: 60
 };
 
@@ -14,6 +16,7 @@ const state = {
     ws: null,
     reconnectAttempts: 0,
     isConnected: false,
+    isManualClose: false,
     uptimeSeconds: 0,
     pingHistory: [],
     networkHistory: { upload: [], download: [] },
@@ -69,9 +72,7 @@ function formatBytes(bytes, decimals = 2) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
 }
 
-function padZero(num) {
-    return String(num).padStart(2, '0');
-}
+function padZero(num) { return String(num).padStart(2, '0'); }
 
 function getStatusClass(value, thresholds) {
     if (value < thresholds.good) return 'stat-good';
@@ -88,16 +89,16 @@ function updateConnectionStatus(status, message) {
             el.classList.add('connected');
             DOM.statusText.textContent = 'Connected';
             break;
-        case 'disconnected':
-            el.classList.add('disconnected');
-            DOM.statusText.textContent = message || 'Disconnected';
-            break;
         case 'error':
             el.classList.add('disconnected');
             DOM.statusText.textContent = message || 'Error';
             break;
-        default:
+        case 'connecting':
             DOM.statusText.textContent = 'Connecting...';
+            break;
+        default:
+            el.classList.add('disconnected');
+            DOM.statusText.textContent = message || 'Disconnected';
     }
 }
 
@@ -107,8 +108,20 @@ function connectWebSocket() {
         state.ws = null;
     }
     
+    if (state.reconnectAttempts >= CONFIG.maxReconnectAttempts) {
+        console.warn('Max reconnection attempts reached.');
+        updateConnectionStatus('error', 'Connection Failed');
+        DOM.connectionStatus.onclick = () => {
+            state.reconnectAttempts = 0;
+            connectWebSocket();
+            DOM.connectionStatus.onclick = null;
+        };
+        return;
+    }
+
+    state.reconnectAttempts++;
     updateConnectionStatus('connecting');
-    console.log(`Attempting to connect to ${CONFIG.wsUrl}...`);
+    console.log(`Attempting WS connection (${state.reconnectAttempts}/${CONFIG.maxReconnectAttempts})...`);
 
     try {
         state.ws = new WebSocket(CONFIG.wsUrl);
@@ -125,56 +138,37 @@ function connectWebSocket() {
                 const data = JSON.parse(event.data);
                 handleServerData(data);
             } catch (err) {
-                console.warn('Failed to parse data:', err);
+                console.warn('Parse error:', err);
             }
         };
         
         state.ws.onerror = (err) => {
-            console.error('WebSocket Error:', err);
-            // Check if it's likely a CSP issue
-            if (location.protocol === 'https:' && CONFIG.wsUrl.startsWith('ws://')) {
-                updateConnectionStatus('error', 'Mixed Content Blocked');
-            } else {
-                updateConnectionStatus('error', 'Connection Blocked');
-            }
+            console.error('WS Error:', err);
         };
         
         state.ws.onclose = (event) => {
-            console.log('WebSocket Closed:', event.code, event.reason);
             state.isConnected = false;
             
-            if (event.code === 1006) {
-                // 1006 = Abnormal closure (usually CSP block or network fail)
-                updateConnectionStatus('error', 'Blocked / Network Error');
-            } else {
-                updateConnectionStatus('disconnected');
-            }
+            let reason = "Unknown";
+            if (event.code === 1006) reason = "Network Error / Mixed Content";
             
-            attemptReconnect();
+            console.log(`WS Closed: ${event.code} (${reason})`);
+            
+            if (!state.isManualClose) {
+                updateConnectionStatus('disconnected', `Retrying...`);
+                setTimeout(connectWebSocket, CONFIG.reconnectInterval);
+            }
         };
         
     } catch (err) {
-        console.error('Failed to create WebSocket:', err);
+        console.error('Init WS Failed:', err);
         updateConnectionStatus('error', 'Init Failed');
-        attemptReconnect();
-    }
-}
-
-function attemptReconnect() {
-    if (state.reconnectAttempts < CONFIG.maxReconnectAttempts) {
-        state.reconnectAttempts++;
-        const delay = CONFIG.reconnectInterval;
-        console.log(`Reconnecting in ${delay/1000}s (Attempt ${state.reconnectAttempts})`);
-        setTimeout(connectWebSocket, delay);
-    } else {
-        updateConnectionStatus('error', 'Max retries reached');
     }
 }
 
 function handleServerData(data) {
     updateTimestamp();
     
-    // Direct properties
     if (data.ping !== undefined) updatePing(data.ping);
     if (data.uptime !== undefined) updateUptime(data.uptime);
     if (data.cpu !== undefined) updateCPU(data.cpu);
@@ -182,7 +176,6 @@ function handleServerData(data) {
     if (data.disk !== undefined) updateDisk(data.disk);
     if (data.network !== undefined) updateNetwork(data.network);
     
-    // Nested stats object
     if (data.stats) {
         if (data.stats.ping) updatePing(data.stats.ping);
         if (data.stats.uptime) updateUptime(data.stats.uptime);
@@ -202,7 +195,6 @@ function updateTimestamp() {
 function updatePing(ping) {
     const val = Math.round(ping);
     DOM.pingValue.textContent = val;
-    
     const cls = getStatusClass(val, { good: 50, warn: 150 });
     DOM.pingStatus.className = cls;
     DOM.pingStatus.textContent = cls === 'stat-good' ? 'Excellent' : cls === 'stat-warn' ? 'Moderate' : 'High Latency';
@@ -212,7 +204,6 @@ function updatePing(ping) {
     
     const bars = DOM.pingBars.querySelectorAll('.bar');
     const max = Math.max(...state.pingHistory, 100);
-    
     bars.forEach((bar, i) => {
         const v = state.pingHistory[i] || 0;
         bar.style.height = `${Math.max(4, (v / max) * 40)}px`;
@@ -228,12 +219,10 @@ function updatePing(ping) {
 function updateUptime(uptime) {
     const sec = parseInt(uptime) || state.uptimeSeconds;
     state.uptimeSeconds = sec;
-    
     DOM.uptimeDays.textContent = padZero(Math.floor(sec / 86400));
     DOM.uptimeHours.textContent = padZero(Math.floor((sec % 86400) / 3600));
     DOM.uptimeMins.textContent = padZero(Math.floor((sec % 3600) / 60));
     DOM.uptimeSecs.textContent = padZero(sec % 60);
-    
     DOM.uptimePercent.textContent = '99.98%';
     DOM.uptimeStatus.className = 'stat-good';
     DOM.uptimeStatus.textContent = 'Running stable';
@@ -242,10 +231,8 @@ function updateUptime(uptime) {
 function updateCPU(cpu) {
     const val = Math.min(100, Math.max(0, cpu));
     DOM.cpuValue.textContent = Math.round(val);
-    
     const arc = 251.33;
     DOM.cpuGaugeFill.setAttribute('stroke-dasharray', `${(val / 100) * arc} ${arc}`);
-    
     const cls = getStatusClass(val, { good: 50, warn: 80 });
     DOM.cpuStatus.className = cls;
     DOM.cpuStatus.textContent = cls === 'stat-good' ? 'Normal load' : cls === 'stat-warn' ? 'High load' : 'Critical';
@@ -253,7 +240,6 @@ function updateCPU(cpu) {
 
 function updateMemory(mem) {
     let used, total, cached = 0;
-    
     if (typeof mem === 'object') {
         used = mem.used || mem.usedBytes || 0;
         total = mem.total || mem.totalBytes || 1;
@@ -262,16 +248,13 @@ function updateMemory(mem) {
         total = 16 * 1024 ** 3;
         used = (mem / 100) * total;
     }
-    
     const pct = (used / total) * 100;
     const cachedPct = (cached / total) * 100;
-    
     DOM.memoryUsed.textContent = (used / 1024 ** 3).toFixed(1) + ' GB';
     DOM.memoryTotal.textContent = (total / 1024 ** 3).toFixed(1) + ' GB';
     DOM.memoryPercent.textContent = Math.round(pct) + '%';
     DOM.memoryUsedBar.style.width = `${pct - cachedPct}%`;
     DOM.memoryCachedBar.style.width = `${cachedPct}%`;
-    
     const cls = getStatusClass(pct, { good: 60, warn: 85 });
     DOM.memoryStatus.className = cls;
     DOM.memoryStatus.textContent = cls === 'stat-good' ? 'Healthy' : cls === 'stat-warn' ? 'High usage' : 'Critical';
@@ -279,7 +262,6 @@ function updateMemory(mem) {
 
 function updateDisk(disk) {
     let used, total;
-    
     if (typeof disk === 'object') {
         used = disk.used || disk.usedBytes || 0;
         total = disk.total || disk.totalBytes || 1;
@@ -287,17 +269,13 @@ function updateDisk(disk) {
         total = 500 * 1024 ** 3;
         used = (disk / 100) * total;
     }
-    
     const pct = (used / total) * 100;
-    
     DOM.diskUsed.textContent = (used / 1024 ** 3).toFixed(1) + ' GB';
     DOM.diskTotal.textContent = (total / 1024 ** 3).toFixed(1) + ' GB';
     DOM.diskFree.textContent = ((total - used) / 1024 ** 3).toFixed(1) + ' GB';
     DOM.diskPercent.textContent = Math.round(pct);
-    
     const circ = 314.16;
     DOM.diskGaugeFill.setAttribute('stroke-dasharray', `${(pct / 100) * circ} ${circ}`);
-    
     const cls = getStatusClass(pct, { good: 70, warn: 90 });
     DOM.diskStatus.className = cls;
     DOM.diskStatus.textContent = cls === 'stat-good' ? 'Plenty of space' : cls === 'stat-warn' ? 'Running low' : 'Critical';
@@ -305,29 +283,22 @@ function updateDisk(disk) {
 
 function updateNetwork(net) {
     let up = 0, down = 0;
-    
     if (typeof net === 'object') {
         up = net.tx || net.upload || net.bytesSent || 0;
         down = net.rx || net.download || net.bytesReceived || 0;
     }
-    
     const speedUp = Math.max(0, up - state.lastNetworkBytes.up);
     const speedDown = Math.max(0, down - state.lastNetworkBytes.down);
-    
     state.lastNetworkBytes.up = up;
     state.lastNetworkBytes.down = down;
-    
     DOM.networkUp.textContent = formatBytes(speedUp) + '/s';
     DOM.networkDown.textContent = formatBytes(speedDown) + '/s';
-    
     state.networkHistory.upload.push(speedUp);
     state.networkHistory.download.push(speedDown);
-    
     if (state.networkHistory.upload.length > CONFIG.networkChartPoints) {
         state.networkHistory.upload.shift();
         state.networkHistory.download.shift();
     }
-    
     drawNetworkChart();
 }
 
@@ -335,58 +306,42 @@ function drawNetworkChart() {
     const canvas = DOM.networkCanvas;
     const ctx = canvas.getContext('2d');
     const rect = canvas.parentElement.getBoundingClientRect();
-    
     canvas.width = rect.width * window.devicePixelRatio;
     canvas.height = rect.height * window.devicePixelRatio;
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-    
     const w = rect.width;
     const h = rect.height;
-    
     ctx.clearRect(0, 0, w, h);
-    
     const all = [...state.networkHistory.upload, ...state.networkHistory.download];
     const max = Math.max(...all, 1000);
-    
     const drawLine = (data, color) => {
         if (data.length < 2) return;
-        
         ctx.beginPath();
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
         ctx.lineJoin = 'round';
-        
         const step = (w - 8) / (CONFIG.networkChartPoints - 1);
-        
         data.forEach((v, i) => {
             const x = 4 + i * step;
             const y = h - 4 - (v / max) * (h - 8);
             i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         });
-        
         ctx.stroke();
     };
-    
     drawLine(state.networkHistory.upload, '#10b981');
     drawLine(state.networkHistory.download, '#00d9ff');
 }
 
 function init() {
-    console.log('Initializing Dashboard...');
+    console.log('Dashboard Initializing (Mode: Local File / Non-SSL)');
+    console.log('Target:', CONFIG.wsUrl);
     
-    // Init chart arrays
     for (let i = 0; i < CONFIG.networkChartPoints; i++) {
         state.networkHistory.upload.push(0);
         state.networkHistory.download.push(0);
     }
-    
-    // Set default core info
     DOM.cpuCores.textContent = '--';
-    
-    // Start connection
     connectWebSocket();
-    
-    // Event listeners
     window.addEventListener('resize', drawNetworkChart);
     setInterval(updateTimestamp, 1000);
     updateTimestamp();
