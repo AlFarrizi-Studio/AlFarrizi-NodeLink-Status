@@ -1,14 +1,14 @@
 // Configuration
 const CONFIG = {
     apiUrl: 'https://unclaiming-fully-camron.ngrok-free.dev/all',
-    refreshInterval: 5000,
+    refreshInterval: 1000, // 1 Detik
     maxRetries: 3
 };
 
 // State
 let refreshTimer = null;
 let countdownTimer = null;
-let countdownValue = 5;
+let countdownValue = 1;
 let retryCount = 0;
 
 // DOM Elements Cache
@@ -38,8 +38,9 @@ const elements = {
     endpointsGrid: document.getElementById('endpointsGrid'),
     sourcesContainer: document.getElementById('sourcesContainer'),
     sourceCount: document.getElementById('sourceCount'),
+    filtersContainer: document.getElementById('filtersContainer'),
+    filterCount: document.getElementById('filterCount'),
     refreshCount: document.getElementById('refreshCount'),
-    // New elements
     tracksContainer: document.getElementById('tracksContainer'),
     playerCountBadge: document.getElementById('playerCountBadge')
 };
@@ -118,18 +119,15 @@ function updateTime() {
 }
 
 function startCountdown() {
-    countdownValue = 5;
+    countdownValue = 1;
     updateCountdownDisplay();
     
     if (countdownTimer) clearInterval(countdownTimer);
     
     countdownTimer = setInterval(() => {
         countdownValue--;
+        if (countdownValue <= 0) countdownValue = 1;
         updateCountdownDisplay();
-        
-        if (countdownValue <= 0) {
-            countdownValue = 5;
-        }
     }, 1000);
 }
 
@@ -222,27 +220,29 @@ function renderEndpoints(data) {
 function renderFeatures(data) {
     const { features } = data.information;
     
-    elements.sourceCount.textContent = features.source_managers.length + ' sources';
+    // Sources
+    elements.sourceCount.textContent = features.source_managers.length;
     elements.sourcesContainer.innerHTML = features.source_managers
         .map(source => `<span class="source-tag">${source}</span>`)
         .join('');
+        
+    // Filters
+    elements.filterCount.textContent = features.filters.length;
+    elements.filtersContainer.innerHTML = features.filters
+        .map(filter => `<span class="filter-tag">${filter}</span>`)
+        .join('');
 }
 
-// NEW: Render Now Playing Tracks
 function renderNowPlaying(data) {
     const tracks = data.now_playing;
     const container = elements.tracksContainer;
     
-    // Update badge
     elements.playerCountBadge.textContent = `${tracks.length} Active`;
-    
-    // Clear container
-    container.innerHTML = '';
     
     if (!tracks || tracks.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px;opacity:0.5">
                     <circle cx="12" cy="12" r="10"/>
                     <path d="M8 12h8M12 8v8"/>
                 </svg>
@@ -252,13 +252,14 @@ function renderNowPlaying(data) {
         return;
     }
     
+    container.innerHTML = '';
+    
     tracks.forEach(track => {
-        // Standard Lavalink track structure assumptions
         const info = track.info || {};
         const title = info.title || 'Unknown Title';
         const author = info.author || 'Unknown Artist';
         const duration = info.length || 0;
-        const artwork = info.artworkUrl || 'https://via.placeholder.com/400x225/151c26/e8f0f8?text=No+Cover';
+        const artwork = info.artworkUrl || 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3b5.png';
         const source = track.info.sourceName || 'unknown';
         
         const card = document.createElement('div');
@@ -266,7 +267,7 @@ function renderNowPlaying(data) {
         
         card.innerHTML = `
             <div class="track-cover">
-                <img src="${artwork}" alt="${title}" onerror="this.src='https://via.placeholder.com/400x225/151c26/e8f0f8?text=Error'">
+                <img src="${artwork}" alt="${title}" onerror="this.src='https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f3b5.png'">
                 <div class="play-overlay">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <polygon points="5,3 19,12 5,21"/>
@@ -313,7 +314,7 @@ async function fetchData() {
             renderPlayersData(result.data);
             renderEndpoints(result.data);
             renderFeatures(result.data);
-            renderNowPlaying(result.data); // NEW
+            renderNowPlaying(result.data);
             
             updateTime();
             retryCount = 0;
