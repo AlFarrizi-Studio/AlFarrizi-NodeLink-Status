@@ -1,14 +1,14 @@
 // Configuration
 const CONFIG = {
     apiUrl: 'https://unclaiming-fully-camron.ngrok-free.dev/all',
-    refreshInterval: 5000, // 5 Detik
+    refreshInterval: 1000, // 1 Detik
     maxRetries: 3
 };
 
 // State
 let refreshTimer = null;
 let countdownTimer = null;
-let countdownValue = 5;
+let countdownValue = 1;
 let retryCount = 0;
 
 // DOM Elements Cache (Sama seperti sebelumnya)
