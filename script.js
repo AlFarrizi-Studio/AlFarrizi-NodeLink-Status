@@ -68,21 +68,25 @@ function getStatusClass(status) {
 }
 
 function setBadgeStatus(element, status, text = null) {
+    if (!element) return;
     element.className = 'status-badge ' + getStatusClass(status);
     element.textContent = text || status;
 }
 
 function setLatencyStatus(element, status) {
+    if (!element) return;
     element.className = 'latency-status ' + getStatusClass(status);
     element.textContent = status.toUpperCase();
 }
 
 function setMemoryStatus(element, status) {
+    if (!element) return;
     element.className = 'memory-status ' + getStatusClass(status);
     element.textContent = status.toUpperCase();
 }
 
 function updateGauge(gaugeElement, percentage) {
+    if (!gaugeElement) return;
     const circumference = 314;
     const offset = circumference - (percentage / 100) * circumference;
     gaugeElement.style.strokeDashoffset = Math.max(0, offset);
@@ -94,7 +98,7 @@ function updateGauge(gaugeElement, percentage) {
 
 function updateTime() {
     const now = new Date();
-    elements.lastUpdate.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    if(elements.lastUpdate) elements.lastUpdate.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 function startCountdown() {
@@ -109,41 +113,40 @@ function startCountdown() {
 }
 
 function updateCountdownDisplay() {
-    elements.refreshCount.textContent = `Next: ${countdownValue}s`;
+    if(elements.refreshCount) elements.refreshCount.textContent = `Next: ${countdownValue}s`;
 }
 
 // ==========================================
-// DATA RENDERING FUNCTIONS (UPDATED STRUCTURE)
+// RENDER FUNCTIONS (DENGAN SAFETY CHECK)
 // ==========================================
 
 function renderVersion(data) {
-    // NEW: data.server.version.semver
-    const version = data.server?.version?.semver || data.version || '--';
-    elements.versionDisplay.textContent = version;
+    // Safety: pastikan data & data.server ada
+    if (!data || !data.server) return;
+    const version = data.server?.version?.semver || '--';
+    if(elements.versionDisplay) elements.versionDisplay.textContent = version;
 }
 
 function renderServerStatus(data) {
-    // NEW: data.performance.health
+    // Safety: pastikan data ada
+    if (!data) return;
+    
     const health = data.performance?.health || { status: 'Unknown' };
     const uptime = data.performance?.uptime || { formatted: '--' };
 
-    // Server dianggap online jika fetch berhasil
     setBadgeStatus(elements.serverStatus, 'online', 'Online');
-    
-    // Status kesehatan (Critical, Good, etc.)
     setBadgeStatus(elements.healthyStatus, health.status, health.status);
-    
-    elements.uptimeDisplay.textContent = uptime.formatted;
+    if(elements.uptimeDisplay) elements.uptimeDisplay.textContent = uptime.formatted;
 }
 
 function renderNetworkData(data) {
-    // NEW: data.response_time_ms ( ada di root data)
-    const latency = data.response_time_ms;
+    if (!data) return;
     
-    elements.latencyOverall.textContent = latency;
-    elements.latencyAvg.textContent = latency + ' ms'; // Average sama dengan response time
+    const latency = data.response_time_ms || 0;
     
-    // Logika status sederhana
+    if(elements.latencyOverall) elements.latencyOverall.textContent = latency;
+    if(elements.latencyAvg) elements.latencyAvg.textContent = latency + ' ms';
+    
     let status = 'good';
     if (latency > 300) status = 'poor';
     if (latency > 500) status = 'error';
@@ -152,73 +155,72 @@ function renderNetworkData(data) {
 }
 
 function renderMemoryData(data) {
-    // NEW: data.performance.memory
-    const mem = data.performance?.memory;
-    if (!mem) return;
+    if (!data || !data.performance || !data.performance.memory) return;
 
-    // Parsing "92.26%" -> 92.26
+    const mem = data.performance.memory;
     const percentRaw = parseFloat(mem.usage_percent);
     const percent = isNaN(percentRaw) ? 0 : percentRaw;
 
-    elements.memoryPercent.textContent = percent.toFixed(1);
+    if(elements.memoryPercent) elements.memoryPercent.textContent = percent.toFixed(1);
     updateGauge(elements.memoryGauge, percent);
     
-    // Status logic
     let status = 'normal';
     if (percent > 90) status = 'critical';
     else if (percent > 70) status = 'warning';
     
     setMemoryStatus(elements.memoryStatus, status);
     
-    // Parsing "85.45 MB"
-    elements.memUsed.textContent = mem.used?.formatted || '-- MB';
-    elements.memFree.textContent = mem.free?.formatted || '-- GB';
+    if(elements.memUsed) elements.memUsed.textContent = mem.used?.formatted || '-- MB';
+    if(elements.memFree) elements.memFree.textContent = mem.free?.formatted || '-- GB';
 }
 
 function renderCPUData(data) {
-    // NEW: data.performance.cpu
-    const cpu = data.performance?.cpu;
-    if (!cpu) return;
+    if (!data || !data.performance || !data.performance.cpu) return;
 
-    // Parsing "1651.00%" -> 1651
-    const systemLoad = parseFloat(cpu.system_load);
-    const lavalinkLoad = parseFloat(cpu.lavalink_load);
+    const cpu = data.performance.cpu;
+    const systemLoad = parseFloat(cpu.system_load) || 0;
+    const lavalinkLoad = parseFloat(cpu.lavalink_load) || 0;
 
-    elements.cpuLavalink.textContent = lavalinkLoad.toFixed(2) + '%';
-    elements.cpuLavalinkBar.style.width = Math.min(lavalinkLoad, 100) + '%';
-    elements.cpuLavalinkBar.classList.toggle('high', lavalinkLoad > 70);
+    if(elements.cpuLavalink) elements.cpuLavalink.textContent = lavalinkLoad.toFixed(2) + '%';
+    if(elements.cpuLavalinkBar) {
+        elements.cpuLavalinkBar.style.width = Math.min(lavalinkLoad, 100) + '%';
+        elements.cpuLavalinkBar.classList.toggle('high', lavalinkLoad > 70);
+    }
 
     const systemDisplay = Math.min(systemLoad, 100);
-    elements.cpuSystem.textContent = systemLoad.toFixed(2) + '%';
-    elements.cpuSystemBar.style.width = systemDisplay + '%';
-    elements.cpuSystemBar.classList.toggle('high', systemLoad > 70);
+    if(elements.cpuSystem) elements.cpuSystem.textContent = systemLoad.toFixed(2) + '%';
+    if(elements.cpuSystemBar) {
+        elements.cpuSystemBar.style.width = systemDisplay + '%';
+        elements.cpuSystemBar.classList.toggle('high', systemLoad > 70);
+    }
 
-    elements.cpuCores.textContent = cpu.cores;
+    if(elements.cpuCores) elements.cpuCores.textContent = cpu.cores || '--';
 }
 
 function renderPlayersData(data) {
-    // NEW: data.audio_stats.players
-    const players = data.audio_stats?.players;
-    if (!players) return;
+    if (!data || !data.audio_stats || !data.audio_stats.players) return;
 
-    elements.playersTotal.textContent = players.total;
-    elements.playersPlaying.textContent = players.playing;
-    elements.playersIdle.textContent = players.idle;
+    const players = data.audio_stats.players;
+
+    if(elements.playersTotal) elements.playersTotal.textContent = players.total;
+    if(elements.playersPlaying) elements.playersPlaying.textContent = players.playing;
+    if(elements.playersIdle) elements.playersIdle.textContent = players.idle;
     
     const activity = players.total > 0 ? ((players.playing / players.total) * 100).toFixed(1) : 0;
-    elements.playersActivity.textContent = activity + '%';
+    if(elements.playersActivity) elements.playersActivity.textContent = activity + '%';
 }
 
 function renderEndpoints(data) {
-    // CHECK: Jika endpoints tidak ada di JSON baru, skip atau clear
+    // Safety: Jika network tidak ada (seperti di JSON terbaru), skip atau tampilkan pesan
+    if (!elements.endpointsGrid) return;
+    
     if (!data.network || !data.network.endpoints) {
-        elements.endpointsGrid.innerHTML = '<div class="empty-state" style="grid-column:1/-1; padding:10px; border:none;">Endpoint data unavailable</div>';
+        elements.endpointsGrid.innerHTML = '<div class="empty-state" style="grid-column:1/-1; padding:10px; border:none; color:var(--text-muted); font-size:0.8rem;">Endpoint data unavailable in this API version</div>';
         return;
     }
     
     const { endpoints } = data.network;
-    const grid = elements.endpointsGrid;
-    grid.innerHTML = '';
+    elements.endpointsGrid.innerHTML = '';
     
     Object.entries(endpoints).forEach(([name, info]) => {
         const item = document.createElement('div');
@@ -230,17 +232,19 @@ function renderEndpoints(data) {
                 <span class="endpoint-status-dot ${info.status}"></span>
             </div>
         `;
-        grid.appendChild(item);
+        elements.endpointsGrid.appendChild(item);
     });
 }
 
 function renderFeatures(data) {
-    // NEW: data.server.capabilities
-    const caps = data.server?.capabilities || { sources: [], filters: [] };
+    if (!elements.sourcesContainer || !elements.filtersContainer) return;
+
+    // Safety: default ke object kosong jika tidak ada
+    const caps = (data.server && data.server.capabilities) ? data.server.capabilities : { sources: [], filters: [] };
 
     // 1. Source Managers
     const sourceManagers = caps.sources || [];
-    elements.sourceCount.textContent = sourceManagers.length;
+    if(elements.sourceCount) elements.sourceCount.textContent = sourceManagers.length;
     
     elements.sourcesContainer.innerHTML = sourceManagers
         .map(source => {
@@ -256,20 +260,22 @@ function renderFeatures(data) {
         
     // 2. Filters
     const audioFilters = caps.filters || [];
-    elements.filterCount.textContent = audioFilters.length;
+    if(elements.filterCount) elements.filterCount.textContent = audioFilters.length;
     elements.filtersContainer.innerHTML = audioFilters
         .map(filter => `<span class="filter-tag">${filter}</span>`)
         .join('');
 }
 
 function renderNowPlaying(data) {
-    const tracks = data.now_playing;
-    const container = elements.tracksContainer;
+    if (!elements.tracksContainer) return;
+
+    // Safety: default ke array kosong
+    const tracks = data.now_playing || [];
     
-    elements.playerCountBadge.textContent = `${tracks.length} Active`;
+    if(elements.playerCountBadge) elements.playerCountBadge.textContent = `${tracks.length} Active`;
     
-    if (!tracks || tracks.length === 0) {
-        container.innerHTML = `
+    if (tracks.length === 0) {
+        elements.tracksContainer.innerHTML = `
             <div class="empty-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px;opacity:0.5">
                     <circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/>
@@ -280,10 +286,9 @@ function renderNowPlaying(data) {
         return;
     }
     
-    container.innerHTML = '';
+    elements.tracksContainer.innerHTML = '';
     
     tracks.forEach(track => {
-        // NEW STRUCTURE MAPPING
         const meta = track.metadata || {};
         const playback = track.playback_state || {};
         
@@ -315,7 +320,7 @@ function renderNowPlaying(data) {
             </div>
         `;
         
-        container.appendChild(card);
+        elements.tracksContainer.appendChild(card);
     });
 }
 
@@ -334,29 +339,39 @@ async function fetchData() {
         
         const result = await response.json();
         
-        if (result.success && result.data) {
-            renderVersion(result.data);
-            renderServerStatus(result.data);
-            renderNetworkData(result.data);
-            renderMemoryData(result.data);
-            renderCPUData(result.data);
-            renderPlayersData(result.data);
-            renderEndpoints(result.data);
-            renderFeatures(result.data);
-            renderNowPlaying(result.data);
-            
-            updateTime();
-            retryCount = 0;
+        // Double check: pastikan result ada
+        if (result) {
+            // Hanya render jika success true ATAU jika tidak ada properti success (async fallback)
+            if (result.success === true || result.success === undefined) {
+                const data = result.data || result; // Fallback jika struktur flat
+                
+                renderVersion(data);
+                renderServerStatus(data);
+                renderNetworkData(data);
+                renderMemoryData(data);
+                renderCPUData(data);
+                renderPlayersData(data);
+                renderEndpoints(data);
+                renderFeatures(data);
+                renderNowPlaying(data);
+                
+                updateTime();
+                retryCount = 0;
+            }
         }
     } catch (error) {
         console.error('Fetch error:', error);
         retryCount++;
         
         if (retryCount >= CONFIG.maxRetries) {
-            elements.serverStatus.textContent = 'ERROR';
-            elements.serverStatus.className = 'status-badge offline';
-            elements.healthyStatus.textContent = 'RETRY';
-            elements.healthyStatus.className = 'status-badge unhealthy';
+            if(elements.serverStatus) {
+                elements.serverStatus.textContent = 'ERROR';
+                elements.serverStatus.className = 'status-badge offline';
+            }
+            if(elements.healthyStatus) {
+                elements.healthyStatus.textContent = 'RETRY';
+                elements.healthyStatus.className = 'status-badge unhealthy';
+            }
         }
     }
 }
