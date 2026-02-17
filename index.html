@@ -3,335 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Monitor Dashboard</title>
-    
-    <!-- CSS - Pastikan nama file sama persis -->
-    <link rel="stylesheet" href="./style.css">
-    
-    <!-- Fonts -->
+    <title>Al Farrizi NodeLink Monitor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Background Pattern -->
-    <div class="bg-grid"></div>
+    <div class="grid-bg"></div>
+    <div class="scan-line"></div>
     
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <div class="logo">
+            <div class="logo-section">
                 <div class="logo-icon">
-                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                        <rect x="2" y="6" width="28" height="8" rx="2" stroke="currentColor" stroke-width="2"/>
-                        <rect x="2" y="18" width="28" height="8" rx="2" stroke="currentColor" stroke-width="2"/>
-                        <circle cx="7" cy="10" r="2" fill="currentColor"/>
-                        <circle cx="7" cy="22" r="2" fill="currentColor"/>
-                        <line x1="12" y1="10" x2="24" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        <line x1="12" y1="22" x2="24" y2="22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
                     </svg>
                 </div>
                 <div class="logo-text">
-                    <span class="logo-title">Server Monitor</span>
-                    <span class="logo-subtitle">Real-time Analytics</span>
+                    <h1>Al Farrizi NodeLink</h1>
+                    <span class="subtitle">Real-time Status Monitor</span>
                 </div>
             </div>
-            <div class="header-actions">
-                <div class="connection-status" id="connectionStatus">
-                    <span class="status-dot"></span>
-                    <span class="status-text">Connecting...</span>
+            <div class="header-status">
+                <div class="live-indicator">
+                    <span class="pulse"></span>
+                    <span>LIVE</span>
                 </div>
-                <div class="timestamp" id="timestamp">--:--:--</div>
+                <div class="last-update" id="lastUpdate">--:--:--</div>
             </div>
         </header>
 
-        <!-- Server Info Bar -->
-        <div class="server-info">
-            <div class="server-id">
-                <span class="label">Server ID</span>
-                <span class="value">637e6e35-1ebe-4d0d-8560-7c214ba5123b</span>
+        <!-- Server Info Banner -->
+        <section class="server-banner">
+            <div class="server-details">
+                <div class="server-item">
+                    <span class="label">Host</span>
+                    <span class="value mono">38.190.133.136</span>
+                </div>
+                <div class="server-item">
+                    <span class="label">Port</span>
+                    <span class="value mono">25867</span>
+                </div>
+                <div class="server-item">
+                    <span class="label">Secure</span>
+                    <span class="value mono secure-false">false</span>
+                </div>
+                <div class="server-item">
+                    <span class="label">Version</span>
+                    <span class="value mono" id="versionDisplay">--</span>
+                </div>
             </div>
-            <div class="server-endpoint">
-                <span class="label">Endpoint</span>
-                <span class="value">nc1.lemonhost.me:8080</span>
-            </div>
-        </div>
+        </section>
 
-        <!-- Stats Grid -->
-        <main class="stats-grid">
-            
-            <!-- Ping Card -->
-            <article class="stat-card ping-card">
+        <!-- Main Status Cards -->
+        <section class="status-grid">
+            <!-- Server Status -->
+            <div class="card status-card">
                 <div class="card-header">
-                    <div class="card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <circle cx="12" cy="12" r="3"/>
-                            <line x1="12" y1="2" x2="12" y2="6"/>
-                            <line x1="12" y1="18" x2="12" y2="22"/>
-                            <line x1="2" y1="12" x2="6" y2="12"/>
-                            <line x1="18" y1="12" x2="22" y2="12"/>
+                    <div class="card-icon server">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" rx="2"/>
+                            <rect x="2" y="14" width="20" height="8" rx="2"/>
+                            <circle cx="6" cy="6" r="1" fill="currentColor"/>
+                            <circle cx="6" cy="18" r="1" fill="currentColor"/>
                         </svg>
                     </div>
-                    <span class="card-label">Latency</span>
+                    <h2>Server Status</h2>
                 </div>
                 <div class="card-body">
-                    <div class="metric-value">
-                        <span class="value" id="pingValue">--</span>
-                        <span class="unit">ms</span>
+                    <div class="status-row">
+                        <span class="status-label">Server</span>
+                        <span class="status-badge" id="serverStatus">--</span>
                     </div>
-                    <div class="ping-bars" id="pingBars">
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
-                        <div class="bar"></div>
+                    <div class="status-row">
+                        <span class="status-label">Healthy</span>
+                        <span class="status-badge" id="healthyStatus">--</span>
+                    </div>
+                    <div class="status-row">
+                        <span class="status-label">Uptime</span>
+                        <span class="status-value mono" id="uptimeDisplay">--</span>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <span id="pingStatus">Waiting...</span>
-                </div>
-            </article>
+            </div>
 
-            <!-- Uptime Card -->
-            <article class="stat-card uptime-card">
+            <!-- Network Latency -->
+            <div class="card network-card">
                 <div class="card-header">
-                    <div class="card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
+                    <div class="card-icon network">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                         </svg>
                     </div>
-                    <span class="card-label">Uptime</span>
+                    <h2>Network Latency</h2>
                 </div>
                 <div class="card-body">
-                    <div class="uptime-display">
-                        <div class="uptime-block">
-                            <span class="uptime-value" id="uptimeDays">--</span>
-                            <span class="uptime-label">Days</span>
+                    <div class="latency-display">
+                        <div class="latency-main">
+                            <span class="latency-value mono" id="latencyOverall">--</span>
+                            <span class="latency-unit">ms</span>
                         </div>
-                        <div class="uptime-separator">:</div>
-                        <div class="uptime-block">
-                            <span class="uptime-value" id="uptimeHours">--</span>
-                            <span class="uptime-label">Hours</span>
-                        </div>
-                        <div class="uptime-separator">:</div>
-                        <div class="uptime-block">
-                            <span class="uptime-value" id="uptimeMins">--</span>
-                            <span class="uptime-label">Mins</span>
-                        </div>
-                        <div class="uptime-separator">:</div>
-                        <div class="uptime-block">
-                            <span class="uptime-value" id="uptimeSecs">--</span>
-                            <span class="uptime-label">Secs</span>
-                        </div>
+                        <div class="latency-status" id="latencyStatus">--</div>
                     </div>
-                    <div class="uptime-percentage">
-                        <span class="percentage-label">Availability</span>
-                        <span class="percentage-value" id="uptimePercent">--</span>
+                    <div class="latency-avg">
+                        <span>Average:</span>
+                        <span class="mono" id="latencyAvg">-- ms</span>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <span id="uptimeStatus">Calculating...</span>
-                </div>
-            </article>
+            </div>
 
-            <!-- CPU Card -->
-            <article class="stat-card cpu-card">
+            <!-- Memory Usage -->
+            <div class="card memory-card">
                 <div class="card-header">
-                    <div class="card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <div class="card-icon memory">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                            <rect x="8" y="8" width="8" height="8"/>
+                            <path d="M8 2v2M16 2v2M8 20v2M16 20v2M2 8h2M2 16h2M20 8h2M20 16h2"/>
+                        </svg>
+                    </div>
+                    <h2>Memory Usage</h2>
+                </div>
+                <div class="card-body">
+                    <div class="memory-gauge">
+                        <div class="gauge-ring">
+                            <svg viewBox="0 0 120 120">
+                                <circle class="gauge-bg" cx="60" cy="60" r="50"/>
+                                <circle class="gauge-fill" id="memoryGauge" cx="60" cy="60" r="50"/>
+                            </svg>
+                            <div class="gauge-value">
+                                <span class="mono" id="memoryPercent">--</span>
+                                <span class="unit">%</span>
+                            </div>
+                        </div>
+                        <div class="memory-status" id="memoryStatus">--</div>
+                    </div>
+                    <div class="memory-details">
+                        <div class="mem-row">
+                            <span>Used</span>
+                            <span class="mono" id="memUsed">-- MB</span>
+                        </div>
+                        <div class="mem-row">
+                            <span>Free</span>
+                            <span class="mono" id="memFree">-- GB</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CPU Load -->
+            <div class="card cpu-card">
+                <div class="card-header">
+                    <div class="card-icon cpu">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="4" y="4" width="16" height="16" rx="2"/>
                             <rect x="9" y="9" width="6" height="6"/>
-                            <line x1="9" y1="1" x2="9" y2="4"/>
-                            <line x1="15" y1="1" x2="15" y2="4"/>
-                            <line x1="9" y1="20" x2="9" y2="23"/>
-                            <line x1="15" y1="20" x2="15" y2="23"/>
-                            <line x1="20" y1="9" x2="23" y2="9"/>
-                            <line x1="20" y1="14" x2="23" y2="14"/>
-                            <line x1="1" y1="9" x2="4" y2="9"/>
-                            <line x1="1" y1="14" x2="4" y2="14"/>
+                            <path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/>
                         </svg>
                     </div>
-                    <span class="card-label">CPU Usage</span>
+                    <h2>CPU Load</h2>
                 </div>
                 <div class="card-body">
-                    <div class="gauge-container">
-                        <svg class="gauge" viewBox="0 0 200 120">
-                            <defs>
-                                <linearGradient id="cpuGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <stop offset="0%" style="stop-color:#10b981"/>
-                                    <stop offset="50%" style="stop-color:#f59e0b"/>
-                                    <stop offset="100%" style="stop-color:#ef4444"/>
-                                </linearGradient>
-                            </defs>
-                            <path class="gauge-bg" d="M 20 100 A 80 80 0 0 1 180 100"/>
-                            <path class="gauge-fill" id="cpuGaugeFill" d="M 20 100 A 80 80 0 0 1 180 100" stroke="url(#cpuGradient)" stroke-dasharray="0 251.33"/>
-                        </svg>
-                        <div class="gauge-value">
-                            <span class="value" id="cpuValue">--</span>
-                            <span class="unit">%</span>
+                    <div class="cpu-bars">
+                        <div class="cpu-section">
+                            <span class="cpu-label">Lavalink</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" id="cpuLavalinkBar"></div>
+                            </div>
+                            <span class="cpu-value mono" id="cpuLavalink">--%</span>
+                        </div>
+                        <div class="cpu-section">
+                            <span class="cpu-label">System</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" id="cpuSystemBar"></div>
+                            </div>
+                            <span class="cpu-value mono" id="cpuSystem">--%</span>
                         </div>
                     </div>
                     <div class="cpu-cores">
-                        <span class="cores-label">Cores:</span>
-                        <span class="cores-value" id="cpuCores">--</span>
+                        <span>Cores:</span>
+                        <span class="mono" id="cpuCores">--</span>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <span id="cpuStatus">Monitoring...</span>
-                </div>
-            </article>
+            </div>
+        </section>
 
-            <!-- Memory Card -->
-            <article class="stat-card memory-card">
+        <!-- Players Section -->
+        <section class="players-section">
+            <div class="card players-card">
                 <div class="card-header">
-                    <div class="card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="6" width="20" height="12" rx="2"/>
-                            <line x1="6" y1="10" x2="6" y2="14"/>
-                            <line x1="10" y1="10" x2="10" y2="14"/>
-                            <line x1="14" y1="10" x2="14" y2="14"/>
-                            <line x1="18" y1="10" x2="18" y2="14"/>
+                    <div class="card-icon players">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18V5l12-2v13"/>
+                            <circle cx="6" cy="18" r="3"/>
+                            <circle cx="18" cy="16" r="3"/>
                         </svg>
                     </div>
-                    <span class="card-label">Memory</span>
+                    <h2>Players</h2>
                 </div>
                 <div class="card-body">
-                    <div class="memory-bar-container">
-                        <div class="memory-bar">
-                            <div class="memory-used" id="memoryUsedBar"></div>
-                            <div class="memory-cached" id="memoryCachedBar"></div>
+                    <div class="players-grid">
+                        <div class="player-stat">
+                            <span class="player-value mono" id="playersTotal">--</span>
+                            <span class="player-label">Total</span>
                         </div>
-                        <div class="memory-legend">
-                            <span class="legend-item used"><span class="dot"></span>Used</span>
-                            <span class="legend-item cached"><span class="dot"></span>Cached</span>
-                            <span class="legend-item free"><span class="dot"></span>Free</span>
+                        <div class="player-stat">
+                            <span class="player-value mono" id="playersPlaying">--</span>
+                            <span class="player-label">Playing</span>
                         </div>
-                    </div>
-                    <div class="memory-stats">
-                        <div class="mem-stat">
-                            <span class="mem-label">Used</span>
-                            <span class="mem-value" id="memoryUsed">-- GB</span>
+                        <div class="player-stat">
+                            <span class="player-value mono" id="playersIdle">--</span>
+                            <span class="player-label">Idle</span>
                         </div>
-                        <div class="mem-stat">
-                            <span class="mem-label">Total</span>
-                            <span class="mem-value" id="memoryTotal">-- GB</span>
-                        </div>
-                        <div class="mem-stat highlight">
-                            <span class="mem-label">Usage</span>
-                            <span class="mem-value" id="memoryPercent">--%</span>
+                        <div class="player-stat">
+                            <span class="player-value mono" id="playersActivity">--%</span>
+                            <span class="player-label">Activity</span>
                         </div>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <span id="memoryStatus">Monitoring...</span>
-                </div>
-            </article>
+            </div>
+        </section>
 
-            <!-- Disk Card -->
-            <article class="stat-card disk-card">
+        <!-- Endpoints Status -->
+        <section class="endpoints-section">
+            <div class="card endpoints-card">
                 <div class="card-header">
-                    <div class="card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                            <path d="M 21 12 C 21 13.66 16.97 15 12 15 C 7.03 15 3 13.66 3 12"/>
-                            <path d="M 3 5 V 19 C 3 20.66 7.03 22 12 22 C 16.97 22 21 20.66 21 19 V 5"/>
+                    <div class="card-icon endpoints">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                         </svg>
                     </div>
-                    <span class="card-label">Storage</span>
+                    <h2>Endpoints Status</h2>
                 </div>
                 <div class="card-body">
-                    <div class="disk-visualization">
-                        <div class="disk-ring">
-                            <svg viewBox="0 0 120 120">
-                                <circle class="ring-bg" cx="60" cy="60" r="50"/>
-                                <circle class="ring-fill" id="diskGaugeFill" cx="60" cy="60" r="50" stroke-dasharray="0 314.16"/>
-                            </svg>
-                            <div class="disk-center">
-                                <span class="disk-value" id="diskPercent">--</span>
-                                <span class="disk-unit">%</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="disk-info">
-                        <div class="disk-row">
-                            <span class="disk-label">Used</span>
-                            <span class="disk-data" id="diskUsed">-- GB</span>
-                        </div>
-                        <div class="disk-row">
-                            <span class="disk-label">Total</span>
-                            <span class="disk-data" id="diskTotal">-- GB</span>
-                        </div>
-                        <div class="disk-row">
-                            <span class="disk-label">Free</span>
-                            <span class="disk-data" id="diskFree">-- GB</span>
-                        </div>
+                    <div class="endpoints-grid" id="endpointsGrid">
+                        <!-- Dynamic content -->
                     </div>
                 </div>
-                <div class="card-footer">
-                    <span id="diskStatus">Monitoring...</span>
-                </div>
-            </article>
+            </div>
+        </section>
 
-            <!-- Network Card -->
-            <article class="stat-card network-card">
+        <!-- Features Section -->
+        <section class="features-section">
+            <div class="card features-card">
                 <div class="card-header">
-                    <div class="card-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M 4 14.899 A 7 7 0 1 1 15.71 8 h 1.79 a 4.5 4.5 0 0 1 2.5 8.242"/>
-                            <path d="M 12 12 v 9"/>
-                            <path d="M 8 17 h 8"/>
+                    <div class="card-icon features">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
                         </svg>
                     </div>
-                    <span class="card-label">Network I/O</span>
+                    <h2>Source Managers</h2>
+                    <div class="source-count" id="sourceCount">0 sources</div>
                 </div>
                 <div class="card-body">
-                    <div class="network-io">
-                        <div class="io-row upload">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M 12 19 V 5"/>
-                                <path d="M 5 12 L 12 5 L 19 12"/>
-                            </svg>
-                            <span class="io-label">Upload</span>
-                            <span class="io-value" id="networkUp">-- KB/s</span>
-                        </div>
-                        <div class="io-row download">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M 12 5 V 19"/>
-                                <path d="M 19 12 L 12 19 L 5 12"/>
-                            </svg>
-                            <span class="io-label">Download</span>
-                            <span class="io-value" id="networkDown">-- KB/s</span>
-                        </div>
-                    </div>
-                    <div class="network-chart">
-                        <canvas id="networkCanvas"></canvas>
+                    <div class="sources-container" id="sourcesContainer">
+                        <!-- Dynamic content -->
                     </div>
                 </div>
-                <div class="card-footer">
-                    <span class="stat-info">Live throughput</span>
-                </div>
-            </article>
+            </div>
 
-        </main>
+            <div class="card filters-card">
+                <div class="card-header">
+                    <div class="card-icon filters">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"/>
+                        </svg>
+                    </div>
+                    <h2>Audio Filters</h2>
+                    <div class="filter-count" id="filterCount">0 filters</div>
+                </div>
+                <div class="card-body">
+                    <div class="filters-container" id="filtersContainer">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- Footer -->
         <footer class="footer">
-            <div class="footer-info">
-                <span>Last sync: <span id="lastSync">--</span></span>
+            <div class="footer-content">
+                <span>Al Farrizi NodeLink Monitor</span>
                 <span class="separator">|</span>
-                <span>Refresh rate: 1000ms</span>
+                <span>Auto-refresh: 5s</span>
+                <span class="separator">|</span>
+                <span class="mono" id="refreshCount">Next: 5s</span>
             </div>
         </footer>
     </div>
 
-    <!-- JavaScript -->
-    <script src="./script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
