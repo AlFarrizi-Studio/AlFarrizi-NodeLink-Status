@@ -1,7 +1,7 @@
 // Configuration
 const CONFIG = {
     apiUrl: 'https://unclaiming-fully-camron.ngrok-free.dev/all',
-    refreshInterval: 1000, // 1 Detik
+    refreshInterval: 5000, // 5 Detik
     maxRetries: 3
 };
 
@@ -46,11 +46,6 @@ const elements = {
 };
 
 // Utility Functions
-function formatBytes(megabytes, decimals = 2) {
-    if (megabytes >= 1024) return (megabytes / 1024).toFixed(decimals) + ' GB';
-    return megabytes.toFixed(decimals) + ' MB';
-}
-
 function formatDuration(ms) {
     if (!ms || ms <= 0) return '00:00';
     const seconds = Math.floor(ms / 1000);
@@ -117,18 +112,16 @@ function updateCountdownDisplay() {
 }
 
 // ==========================================
-// RENDER FUNCTIONS (DENGAN SAFETY CHECK)
+// RENDER FUNCTIONS
 // ==========================================
 
 function renderVersion(data) {
-    // Safety: pastikan data & data.server ada
     if (!data || !data.server) return;
     const version = data.server?.version?.semver || '--';
     if(elements.versionDisplay) elements.versionDisplay.textContent = version;
 }
 
 function renderServerStatus(data) {
-    // Safety: pastikan data ada
     if (!data) return;
     
     const health = data.performance?.health || { status: 'Unknown' };
@@ -211,11 +204,11 @@ function renderPlayersData(data) {
 }
 
 function renderEndpoints(data) {
-    // Safety: Jika network tidak ada (seperti di JSON terbaru), skip atau tampilkan pesan
     if (!elements.endpointsGrid) return;
     
+    // Jika tidak ada data endpoints (seperti di JSON baru), tampilkan pesan atau skip
     if (!data.network || !data.network.endpoints) {
-        elements.endpointsGrid.innerHTML = '<div class="empty-state" style="grid-column:1/-1; padding:10px; border:none; color:var(--text-muted); font-size:0.8rem;">Endpoint data unavailable in this API version</div>';
+        elements.endpointsGrid.innerHTML = '<div class="empty-state" style="grid-column:1/-1; padding:10px; border:none; color:var(--text-muted); font-size:0.8rem;">Endpoint data unavailable</div>';
         return;
     }
     
@@ -239,23 +232,14 @@ function renderEndpoints(data) {
 function renderFeatures(data) {
     if (!elements.sourcesContainer || !elements.filtersContainer) return;
 
-    // Safety: default ke object kosong jika tidak ada
     const caps = (data.server && data.server.capabilities) ? data.server.capabilities : { sources: [], filters: [] };
 
-    // 1. Source Managers
+    // 1. Source Managers (Hanya Teks, tanpa gambar)
     const sourceManagers = caps.sources || [];
     if(elements.sourceCount) elements.sourceCount.textContent = sourceManagers.length;
     
     elements.sourcesContainer.innerHTML = sourceManagers
-        .map(source => {
-            const iconPath = `assets/icons/${source.toLowerCase()}.png`;
-            return `
-                <span class="source-tag">
-                    <img src="${iconPath}" class="source-icon" alt="${source}" onerror="this.style.display='none'">
-                    ${source}
-                </span>
-            `;
-        })
+        .map(source => `<span class="source-tag">${source}</span>`)
         .join('');
         
     // 2. Filters
@@ -269,7 +253,6 @@ function renderFeatures(data) {
 function renderNowPlaying(data) {
     if (!elements.tracksContainer) return;
 
-    // Safety: default ke array kosong
     const tracks = data.now_playing || [];
     
     if(elements.playerCountBadge) elements.playerCountBadge.textContent = `${tracks.length} Active`;
@@ -339,11 +322,9 @@ async function fetchData() {
         
         const result = await response.json();
         
-        // Double check: pastikan result ada
         if (result) {
-            // Hanya render jika success true ATAU jika tidak ada properti success (async fallback)
             if (result.success === true || result.success === undefined) {
-                const data = result.data || result; // Fallback jika struktur flat
+                const data = result.data || result;
                 
                 renderVersion(data);
                 renderServerStatus(data);
