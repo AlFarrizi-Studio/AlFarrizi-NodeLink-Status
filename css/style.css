@@ -1762,7 +1762,7 @@ ul {
 }
 
 /* ============================================
-   SOURCES PAGE - CARD LAYOUT (UPDATED)
+   SOURCES PAGE - SAME LAYOUT AS AUDIO FILTERS
    ============================================ */
 .sources-grid {
     display: grid;
@@ -1786,30 +1786,28 @@ ul {
     box-shadow: 0 0 25px var(--success-glow);
 }
 
-/* Source Header - Title left, Checkmark right */
+/* Source Header - Same structure as .filter-header */
 .source-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .source-title {
     display: flex;
     align-items: center;
     gap: 12px;
-    flex: 1;
-    min-width: 0;
 }
 
 .source-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 18px;
     flex-shrink: 0;
     transition: transform var(--transition-normal);
 }
@@ -1840,16 +1838,39 @@ ul {
 .source-icon.yandex { background: rgba(255, 204, 0, 0.15); color: #ffcc00; }
 .source-icon.flowery { background: rgba(255, 105, 180, 0.15); color: #ff69b4; }
 
-.source-info {
-    flex: 1;
-    min-width: 0;
-}
-
 .source-name {
     font-size: 17px;
     font-weight: 600;
-    margin-bottom: 4px;
-    display: block;
+}
+
+/* Source Checkmark - Top right (SAME AS .filter-check) */
+.source-check {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--success);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 0 12px var(--success-glow);
+    transform: rotate(0deg);
+    transition: all var(--transition-normal);
+}
+
+.source-card:hover .source-check {
+    transform: rotate(0deg) scale(1.1);
+    box-shadow: 0 0 20px var(--success-glow);
+}
+
+/* Source Description with Status */
+.source-description {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
 }
 
 /* Status Available - Green text with animated dot */
@@ -1868,34 +1889,6 @@ ul {
     background: var(--success);
     border-radius: 50%;
     animation: pulse-dot 2s infinite;
-}
-
-/* Source Checkmark - Top right (same as Audio Filters) */
-.source-check {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--success);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 12px;
-    flex-shrink: 0;
-    box-shadow: 0 0 12px var(--success-glow);
-    transition: all var(--transition-normal);
-}
-
-.source-card:hover .source-check {
-    transform: scale(1.1);
-    box-shadow: 0 0 20px var(--success-glow);
-}
-
-/* Source Description */
-.source-description {
-    font-size: 14px;
-    color: var(--text-secondary);
-    line-height: 1.6;
 }
 
 /* ============================================
