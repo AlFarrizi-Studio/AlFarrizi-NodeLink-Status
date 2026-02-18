@@ -600,6 +600,77 @@ ul {
     transform: rotate(180deg);
 }
 
+/* Nav Divider */
+.nav-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 16px 16px;
+}
+
+/* Theme Nav Item */
+.theme-nav-item {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.theme-nav-item a,
+.collapse-nav-item a {
+    background: var(--bg-tertiary);
+}
+
+.theme-nav-item a:hover,
+.collapse-nav-item a:hover {
+    background: var(--primary) !important;
+    color: white !important;
+    transform: translateX(0) !important;
+}
+
+.theme-nav-item a:hover::after,
+.collapse-nav-item a:hover::after {
+    opacity: 0 !important;
+}
+
+/* Collapse Nav Item */
+.collapse-nav-item a i {
+    transition: transform var(--transition-normal);
+}
+
+.sidebar.collapsed .collapse-nav-item a i {
+    transform: rotate(180deg);
+}
+
+/* Collapsed State Adjustments */
+.sidebar.collapsed .nav-divider {
+    margin: 16px 12px;
+}
+
+.sidebar.collapsed .theme-nav-item a,
+.sidebar.collapsed .collapse-nav-item a {
+    justify-content: center;
+    padding: 14px;
+}
+
+.sidebar.collapsed .theme-nav-item a span,
+.sidebar.collapsed .collapse-nav-item a span {
+    display: none;
+}
+
+/* Remove old sidebar header toggle styles if any */
+.sidebar-header {
+    padding: 24px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center the logo */
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Collapsed header */
+.sidebar.collapsed .sidebar-header {
+    padding: 24px 12px;
+    justify-content: center;
+}
+
 /* Sidebar Navigation */
 .sidebar-nav {
     flex: 1;
