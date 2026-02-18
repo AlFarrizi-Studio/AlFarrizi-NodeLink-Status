@@ -1762,7 +1762,7 @@ ul {
 }
 
 /* ============================================
-   SOURCES PAGE - CARD LAYOUT (SAME AS FILTERS)
+   SOURCES PAGE - CARD LAYOUT (UPDATED)
    ============================================ */
 .sources-grid {
     display: grid;
@@ -1786,27 +1786,30 @@ ul {
     box-shadow: 0 0 25px var(--success-glow);
 }
 
+/* Source Header - Title left, Checkmark right */
 .source-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 
 .source-title {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex: 1;
+    min-width: 0;
 }
 
 .source-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 20px;
     flex-shrink: 0;
     transition: transform var(--transition-normal);
 }
@@ -1837,12 +1840,37 @@ ul {
 .source-icon.yandex { background: rgba(255, 204, 0, 0.15); color: #ffcc00; }
 .source-icon.flowery { background: rgba(255, 105, 180, 0.15); color: #ff69b4; }
 
+.source-info {
+    flex: 1;
+    min-width: 0;
+}
+
 .source-name {
     font-size: 17px;
     font-weight: 600;
+    margin-bottom: 4px;
+    display: block;
 }
 
-/* Source Checkmark */
+/* Status Available - Green text with animated dot */
+.source-status {
+    font-size: 13px;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.source-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+}
+
+/* Source Checkmark - Top right (same as Audio Filters) */
 .source-check {
     width: 32px;
     height: 32px;
@@ -1855,15 +1883,15 @@ ul {
     font-size: 12px;
     flex-shrink: 0;
     box-shadow: 0 0 12px var(--success-glow);
-    transform: rotate(0deg);
     transition: all var(--transition-normal);
 }
 
 .source-card:hover .source-check {
-    transform: rotate(0deg) scale(1.1);
+    transform: scale(1.1);
     box-shadow: 0 0 20px var(--success-glow);
 }
 
+/* Source Description */
 .source-description {
     font-size: 14px;
     color: var(--text-secondary);
