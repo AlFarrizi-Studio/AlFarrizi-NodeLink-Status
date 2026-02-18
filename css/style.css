@@ -1378,13 +1378,14 @@ ul {
 
 /* ============================================
 /* ============================================
-   NOW PLAYING SECTION - FIXED WIDTH LIKE QUICK STATS
-   Ukuran TETAP, tidak berubah saat sidebar collapse
+   NOW PLAYING SECTION - FIXED WIDTH, ALIGN LEFT
+   Ukuran TETAP, posisi di KIRI
    ============================================ */
 .now-playing-container {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
+    /* CHANGED: dari center ke flex-start (kiri) */
     gap: 20px;
     margin-bottom: 40px;
     width: 100%;
@@ -1413,10 +1414,11 @@ ul {
     font-size: 16px;
 }
 
-/* Now Playing Card - FIXED WIDTH */
+/* Now Playing Card - FIXED WIDTH, ALIGN LEFT */
 .now-playing-card {
-    /* FIXED WIDTH - sama seperti stat-card */
-    flex: 1 1 340px;
+    /* FIXED WIDTH */
+    flex: 0 0 400px;
+    /* tidak grow, tidak shrink, fixed 400px */
     min-width: 340px;
     max-width: 400px;
 
@@ -1644,6 +1646,8 @@ ul {
    ============================================ */
 @media (max-width: 992px) {
     .now-playing-container {
+        justify-content: center;
+        /* Mobile tetap center */
         gap: 16px;
     }
 
