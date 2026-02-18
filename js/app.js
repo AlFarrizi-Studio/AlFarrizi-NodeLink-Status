@@ -224,9 +224,19 @@ function getChartColors() {
 // SIDEBAR MANAGEMENT
 // ============================================
 function initSidebar() {
-    elements.sidebarToggle?.addEventListener('click', () => {
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    
+    sidebarToggle?.addEventListener('click', (e) => {
+        e.preventDefault();
         elements.sidebar?.classList.toggle('collapsed');
         localStorage.setItem('sidebarCollapsed', elements.sidebar?.classList.contains('collapsed'));
+        
+        // Update toggle text
+        const isCollapsed = elements.sidebar?.classList.contains('collapsed');
+        const span = sidebarToggle.querySelector('span');
+        if (span) {
+            span.textContent = isCollapsed ? 'Expand Menu' : 'Collapse Menu';
+        }
     });
     
     elements.mobileMenuBtn?.addEventListener('click', () => {
@@ -239,12 +249,9 @@ function initSidebar() {
     // Restore state
     if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 992) {
         elements.sidebar?.classList.add('collapsed');
+        const span = sidebarToggle?.querySelector('span');
+        if (span) span.textContent = 'Expand Menu';
     }
-}
-
-function closeMobileSidebar() {
-    elements.sidebar?.classList.remove('mobile-open');
-    elements.sidebarOverlay?.classList.remove('active');
 }
 
 // ============================================
