@@ -15,16 +15,14 @@
         <div class="sidebar-header">
             <div class="logo">
                 <div class="logo-icon">
-                    <i class="fas fa-music"></i>
+                <i class="fas fa-music"></i>
                 </div>
                 <div class="logo-text">
                     <h1>Al Farrizi</h1>
                     <span>Music Bot</span>
                 </div>
             </div>
-            <button class="sidebar-toggle" id="sidebarToggle">
-                <i class="fas fa-chevron-left"></i>
-            </button>
+            <!-- Toggle button removed from here -->
         </div>
 
         <nav class="sidebar-nav">
@@ -77,12 +75,23 @@
                         <span>Feedback</span>
                     </a>
                 </li>
-                
+            
+                <!-- Divider -->
+                <li class="nav-divider"></li>
+            
                 <!-- Theme Toggle Inside Nav -->
                 <li class="nav-item theme-nav-item" id="themeNavItem">
                     <a href="javascript:void(0)" id="themeToggle">
                         <i class="fas fa-moon"></i>
                         <span>Dark Mode</span>
+                    </a>
+                </li>
+            
+                <!-- Sidebar Toggle Inside Nav -->
+                <li class="nav-item collapse-nav-item">
+                    <a href="javascript:void(0)" id="sidebarToggle">
+                        <i class="fas fa-chevron-left"></i>
+                        <span>Collapse Menu</span>
                     </a>
                 </li>
             </ul>
@@ -94,7 +103,7 @@
             </div>
         </div>
     </aside>
-
+    
     <!-- Mobile Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
@@ -1163,3 +1172,4 @@
     <script src="js/app.js"></script>
 </body>
 </html>
+
