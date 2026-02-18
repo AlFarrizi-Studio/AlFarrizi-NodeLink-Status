@@ -9,8 +9,8 @@
 // ============================================
 const CONFIG = {
     API_ENDPOINT: 'https://unclaiming-fully-camron.ngrok-free.dev/all',
-    REFRESH_INTERVAL: 5000,
-    CHART_HISTORY_LENGTH: 20,
+    REFRESH_INTERVAL: 1000,
+    CHART_HISTORY_LENGTH: 30,
     TOAST_DURATION: 4000,
     ANIMATION_DELAY: 100,
 };
@@ -26,6 +26,8 @@ const state = {
     refreshInterval: null,
     chartsInitialized: false,
     currentPage: 'dashboard',
+    sourcesLoaded: false,
+    filtersLoaded: false,
 };
 
 // ============================================
@@ -380,13 +382,23 @@ async function fetchData() {
         state.isOnline = json.success !== false;
         state.lastUpdated = new Date();
         
-        // Update all sections
+        // Update real-time data (always update)
         updateDashboard(data, serverResponseTime);
         updateStats(data);
         updateNowPlaying(data);
-        updateSources(data);
-        updateFilters(data);
         
+        // Update Sources & Filters only ONCE (first load)
+        if (!state.sourcesLoaded) {
+            updateSources(data);
+            state.sourcesLoaded = true;
+        }
+        
+        if (!state.filtersLoaded) {
+            updateFilters(data);
+            state.filtersLoaded = true;
+        }
+        
+        // Update charts
         if (state.chartsInitialized) {
             updateCharts(data, serverResponseTime);
         }
@@ -396,11 +408,6 @@ async function fetchData() {
         state.isOnline = false;
         updateOfflineState();
     }
-}
-
-function startAutoRefresh() {
-    clearInterval(state.refreshInterval);
-    state.refreshInterval = setInterval(fetchData, CONFIG.REFRESH_INTERVAL);
 }
 
 // ============================================
