@@ -1,7 +1,7 @@
 /* ============================================
    AL FARRIZI MUSIC BOT - DASHBOARD APPLICATION
-   Version: 4.23.7
-   Complete Fixed & Updated
+   Version: 4.24.0
+   Now Playing dengan Real-time Progress (No Refresh Flicker)
    ============================================ */
 
 // ============================================
@@ -9,7 +9,8 @@
 // ============================================
 const CONFIG = {
     API_ENDPOINT: 'https://unclaiming-fully-camron.ngrok-free.dev/all',
-    REFRESH_INTERVAL: 1000, // 1 second for real-time
+    REFRESH_INTERVAL: 1000, // 1 second for API data
+    PROGRESS_UPDATE_INTERVAL: 100, // 100ms for smooth progress
     CHART_HISTORY_LENGTH: 30,
     TOAST_DURATION: 4000,
     ANIMATION_DELAY: 100,
@@ -24,11 +25,17 @@ const state = {
     lastUpdated: null,
     charts: {},
     refreshInterval: null,
+    progressInterval: null, // NEW: interval untuk progress
     chartsInitialized: false,
     currentPage: 'dashboard',
     sourcesLoaded: false,
     filtersLoaded: false,
     fetchCount: 0,
+    // NEW: Track state untuk Now Playing
+    nowPlayingState: {
+        tracks: {}, // { guildId: { position, duration, lastUpdate, isPlaying } }
+        lastTrackIds: [], // untuk detect perubahan track
+    },
 };
 
 // ============================================
@@ -111,16 +118,14 @@ function initElements() {
 }
 
 // ============================================
-// AUTO REFRESH FUNCTIONS (MUST BE BEFORE INIT)
+// AUTO REFRESH FUNCTIONS
 // ============================================
 function startAutoRefresh() {
-    // Clear existing interval if any
     if (state.refreshInterval) {
         clearInterval(state.refreshInterval);
         state.refreshInterval = null;
     }
     
-    // Start new interval
     state.refreshInterval = setInterval(function() {
         fetchData();
     }, CONFIG.REFRESH_INTERVAL);
@@ -137,12 +142,75 @@ function stopAutoRefresh() {
 }
 
 // ============================================
+// PROGRESS TIMER FUNCTIONS (NEW)
+// ============================================
+function startProgressTimer() {
+    if (state.progressInterval) {
+        clearInterval(state.progressInterval);
+    }
+    
+    state.progressInterval = setInterval(function() {
+        updateProgressLocally();
+    }, CONFIG.PROGRESS_UPDATE_INTERVAL);
+    
+    console.log('⏱️ Progress timer started (' + CONFIG.PROGRESS_UPDATE_INTERVAL + 'ms)');
+}
+
+function stopProgressTimer() {
+    if (state.progressInterval) {
+        clearInterval(state.progressInterval);
+        state.progressInterval = null;
+        console.log('⏱️ Progress timer stopped');
+    }
+}
+
+function updateProgressLocally() {
+    var now = Date.now();
+    
+    Object.keys(state.nowPlayingState.tracks).forEach(function(guildId) {
+        var track = state.nowPlayingState.tracks[guildId];
+        
+        if (!track.isPlaying || track.isPaused) return;
+        
+        // Hitung elapsed time sejak last update
+        var elapsed = now - track.lastUpdate;
+        var newPosition = track.position + elapsed;
+        
+        // Clamp ke duration
+        if (newPosition > track.duration) {
+            newPosition = track.duration;
+        }
+        
+        // Update DOM elements
+        var card = document.querySelector('[data-guild-id="' + guildId + '"]');
+        if (!card) return;
+        
+        var progressFill = card.querySelector('.progress-fill');
+        var currentTimeEl = card.querySelector('.progress-current');
+        
+        if (progressFill) {
+            var percent = track.duration > 0 ? (newPosition / track.duration) * 100 : 0;
+            progressFill.style.width = percent + '%';
+        }
+        
+        if (currentTimeEl) {
+            currentTimeEl.textContent = formatDuration(newPosition);
+        }
+        
+        // Update internal position (untuk next iteration)
+        track.position = newPosition;
+        track.lastUpdate = now;
+    });
+}
+
+// ============================================
 // INITIALIZATION
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎵 Al Farrizi Music Bot Dashboard v4.23.7');
+    console.log('🎵 Al Farrizi Music Bot Dashboard v4.24.0');
     console.log('📡 API:', CONFIG.API_ENDPOINT);
     console.log('⏱️ Refresh Rate:', CONFIG.REFRESH_INTERVAL + 'ms');
+    console.log('🎬 Progress Update:', CONFIG.PROGRESS_UPDATE_INTERVAL + 'ms');
     
     initElements();
     initTheme();
@@ -163,9 +231,10 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('⚠️ Charts unavailable:', err.message);
         });
     
-    // Fetch data and start refresh
+    // Fetch data and start timers
     fetchData();
     startAutoRefresh();
+    startProgressTimer(); // NEW: Start progress timer
     
     console.log('✅ Dashboard initialized');
 });
@@ -198,7 +267,6 @@ function initTheme() {
     var saved = localStorage.getItem('theme') || 'dark';
     setTheme(saved);
     
-    // Theme toggle events
     if (elements.themeToggle) {
         elements.themeToggle.addEventListener('click', function(e) {
             e.preventDefault();
@@ -221,17 +289,14 @@ function setTheme(theme) {
     var icon = isDark ? 'fa-moon' : 'fa-sun';
     var text = isDark ? 'Dark Mode' : 'Light Mode';
     
-    // Update sidebar theme toggle
     if (elements.themeToggle) {
         elements.themeToggle.innerHTML = '<i class="fas ' + icon + '"></i><span>' + text + '</span>';
     }
     
-    // Update mobile theme toggle
     if (elements.themeToggleMobile) {
         elements.themeToggleMobile.innerHTML = '<i class="fas ' + icon + '"></i>';
     }
     
-    // Update charts
     if (state.chartsInitialized) {
         updateChartsTheme();
     }
@@ -265,7 +330,6 @@ function getChartColors() {
 // SIDEBAR MANAGEMENT
 // ============================================
 function initSidebar() {
-    // Desktop collapse toggle
     var sidebarToggle = document.getElementById('sidebarToggle');
     if (sidebarToggle) {
         sidebarToggle.addEventListener('click', function(e) {
@@ -277,7 +341,6 @@ function initSidebar() {
                 var isCollapsed = elements.sidebar.classList.contains('collapsed');
                 localStorage.setItem('sidebarCollapsed', isCollapsed);
                 
-                // Update text
                 var span = sidebarToggle.querySelector('span');
                 if (span) {
                     span.textContent = isCollapsed ? 'Expand Menu' : 'Collapse Menu';
@@ -286,7 +349,6 @@ function initSidebar() {
         });
     }
     
-    // Mobile menu open
     if (elements.mobileMenuBtn) {
         elements.mobileMenuBtn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -295,7 +357,6 @@ function initSidebar() {
         });
     }
     
-    // Mobile close button (X)
     if (elements.sidebarCloseMobile) {
         elements.sidebarCloseMobile.addEventListener('click', function(e) {
             e.preventDefault();
@@ -304,7 +365,6 @@ function initSidebar() {
         });
     }
     
-    // Overlay click to close
     if (elements.sidebarOverlay) {
         elements.sidebarOverlay.addEventListener('click', function(e) {
             e.preventDefault();
@@ -312,7 +372,6 @@ function initSidebar() {
         });
     }
     
-    // Close sidebar when clicking a nav item on mobile
     document.querySelectorAll('.nav-item a').forEach(function(link) {
         link.addEventListener('click', function() {
             if (window.innerWidth <= 992) {
@@ -321,7 +380,6 @@ function initSidebar() {
         });
     });
     
-    // Restore collapsed state on desktop
     if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 992) {
         if (elements.sidebar) {
             elements.sidebar.classList.add('collapsed');
@@ -349,7 +407,6 @@ function closeMobileSidebar() {
 // NAVIGATION
 // ============================================
 function initNavigation() {
-    // Get all nav items (excluding special items like theme toggle)
     var navItems = document.querySelectorAll('.nav-item[data-page]');
     
     navItems.forEach(function(item) {
@@ -359,7 +416,6 @@ function initNavigation() {
             if (page) {
                 navigateToPage(page);
                 
-                // Close mobile sidebar after navigation
                 if (window.innerWidth <= 992) {
                     closeMobileSidebar();
                 }
@@ -367,13 +423,11 @@ function initNavigation() {
         });
     });
     
-    // Handle browser back/forward
     window.addEventListener('hashchange', function() {
         var hash = window.location.hash.slice(1) || 'dashboard';
         navigateToPage(hash, false);
     });
     
-    // Initial page load
     var initial = window.location.hash.slice(1) || 'dashboard';
     navigateToPage(initial, false);
 }
@@ -383,17 +437,14 @@ function navigateToPage(pageName, updateHash) {
     
     state.currentPage = pageName;
     
-    // Update nav items
     document.querySelectorAll('.nav-item[data-page]').forEach(function(item) {
         item.classList.toggle('active', item.dataset.page === pageName);
     });
     
-    // Update pages with animation
     elements.pages.forEach(function(page) {
         var isTarget = page.id === 'page-' + pageName;
         if (isTarget) {
             page.classList.add('active');
-            // Trigger animations
             var animatedEls = page.querySelectorAll('.animate-fade-in, .animate-fade-in-up');
             animatedEls.forEach(function(el, i) {
                 el.style.animationDelay = (i * 0.05) + 's';
@@ -430,7 +481,6 @@ function fetchData() {
     .then(function(json) {
         var responseTime = Math.round(performance.now() - startTime);
         
-        // Handle nested data structure
         var data = json.data || json;
         var serverResponseTime = data.response_time_ms || responseTime;
         
@@ -439,12 +489,13 @@ function fetchData() {
         state.lastUpdated = new Date();
         state.fetchCount++;
         
-        // Update real-time data (always update)
+        // Update real-time data
         updateDashboard(data, serverResponseTime);
         updateStats(data);
-        updateNowPlaying(data);
         
-        // Update Sources & Filters only ONCE (first load)
+        // NEW: Smart update Now Playing (only rebuild if tracks changed)
+        smartUpdateNowPlaying(data);
+        
         if (!state.sourcesLoaded) {
             updateSources(data);
             state.sourcesLoaded = true;
@@ -457,7 +508,6 @@ function fetchData() {
             console.log('🎛️ Filters loaded (one-time)');
         }
         
-        // Update charts
         if (state.chartsInitialized) {
             updateCharts(data, serverResponseTime);
         }
@@ -500,16 +550,43 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// NEW: Format duration dari milliseconds ke mm:ss atau hh:mm:ss
+function formatDuration(ms) {
+    if (!ms || ms < 0) return '0:00';
+    
+    var totalSeconds = Math.floor(ms / 1000);
+    var hours = Math.floor(totalSeconds / 3600);
+    var minutes = Math.floor((totalSeconds % 3600) / 60);
+    var seconds = totalSeconds % 60;
+    
+    if (hours > 0) {
+        return hours + ':' + padZero(minutes) + ':' + padZero(seconds);
+    }
+    return minutes + ':' + padZero(seconds);
+}
+
+function padZero(num) {
+    return num < 10 ? '0' + num : num.toString();
+}
+
 function formatTimestamp(stamp) {
-    if (!stamp) return '00:00';
+    if (!stamp) return '0:00';
     return stamp.replace(/^00:/, '');
+}
+
+// NEW: Generate unique track ID
+function getTrackId(track) {
+    var meta = track.metadata || {};
+    var guildId = track.guild_id || '';
+    var title = meta.title || '';
+    var uri = meta.uri || '';
+    return guildId + '|' + title + '|' + uri;
 }
 
 // ============================================
 // DASHBOARD UPDATES
 // ============================================
 function updateDashboard(data, responseTime) {
-    // API Status
     if (elements.apiStatusIndicator) {
         elements.apiStatusIndicator.classList.toggle('offline', !state.isOnline);
         var statusText = elements.apiStatusIndicator.querySelector('.status-text');
@@ -523,7 +600,6 @@ function updateDashboard(data, responseTime) {
     var serverVersion = data.server && data.server.version ? data.server.version.semver : null;
     safeSetText(elements.serverVersion, serverVersion);
     
-    // Health
     var health = (data.performance && data.performance.health) || {};
     safeSetText(elements.healthGrade, health.grade);
     safeSetText(elements.healthScore, health.score !== undefined ? health.score + '%' : null);
@@ -531,7 +607,6 @@ function updateDashboard(data, responseTime) {
     var uptimeFormatted = data.performance && data.performance.uptime ? data.performance.uptime.formatted : null;
     safeSetText(elements.uptime, uptimeFormatted);
     
-    // Players
     var audioStats = data.audio_stats || {};
     var players = audioStats.players || {};
     var total = players.total || 0;
@@ -547,7 +622,6 @@ function updateDashboard(data, responseTime) {
     safeSetWidth(elements.activeBar, total > 0 ? (playing / total) * 100 : 0);
     safeSetWidth(elements.idleBar, total > 0 ? (idle / total) * 100 : 0);
     
-    // Frame Integrity
     var frames = audioStats.frame_analysis || {};
     var integrity = parsePercentage(frames.integrity);
     safeSetText(elements.frameIntegrity, integrity.toFixed(0) + '%');
@@ -574,23 +648,19 @@ function updateStats(data) {
     var players = audioStats.players || {};
     var frames = audioStats.frame_analysis || {};
     
-    // CPU
     safeSetText(elements.cpuSystemLoad, cpu.system_load || '--');
     safeSetText(elements.cpuLavalinkLoad, cpu.lavalink_load || '--');
     safeSetText(elements.cpuCores, cpu.cores ? cpu.cores.toString() : null);
     
-    // Memory
     safeSetText(elements.memUsed, memory.used ? memory.used.formatted : null);
     safeSetText(elements.memAllocated, memory.allocated ? memory.allocated.formatted : null);
     safeSetText(elements.memFree, memory.free ? memory.free.formatted : null);
     safeSetText(elements.memUsage, memory.usage_percent);
     
-    // Players
     safeSetText(elements.statTotalPlayers, players.total ? players.total.toString() : '0');
     safeSetText(elements.statPlayingPlayers, players.playing ? players.playing.toString() : '0');
     safeSetText(elements.statIdlePlayers, (players.idle !== undefined ? players.idle : 0).toString());
     
-    // Frames
     safeSetText(elements.statFrameIntegrity, frames.integrity);
     safeSetText(elements.statFrameStatus, frames.status);
     safeSetText(elements.statFrameSent, frames.raw ? frames.raw.sent : null);
@@ -598,14 +668,43 @@ function updateStats(data) {
 }
 
 // ============================================
-// NOW PLAYING
+// NOW PLAYING - SMART UPDATE (NEW)
 // ============================================
-function updateNowPlaying(data) {
+function smartUpdateNowPlaying(data) {
     var nowPlaying = data.now_playing || [];
     
+    // Update count text
     safeSetText(elements.playingCount, nowPlaying.length + ' track' + (nowPlaying.length !== 1 ? 's' : ''));
     
     if (!elements.nowPlayingContainer) return;
+    
+    // Generate current track IDs
+    var currentTrackIds = nowPlaying.map(function(track) {
+        return getTrackId(track);
+    }).sort().join(',');
+    
+    var previousTrackIds = state.nowPlayingState.lastTrackIds.sort().join(',');
+    
+    // Check if tracks changed (different tracks, not just position update)
+    var tracksChanged = currentTrackIds !== previousTrackIds;
+    
+    if (tracksChanged) {
+        console.log('🎵 Tracks changed, rebuilding Now Playing cards');
+        rebuildNowPlayingCards(nowPlaying);
+        state.nowPlayingState.lastTrackIds = nowPlaying.map(function(track) {
+            return getTrackId(track);
+        });
+    }
+    
+    // Always sync position data from API
+    syncTrackPositions(nowPlaying);
+}
+
+function rebuildNowPlayingCards(nowPlaying) {
+    if (!elements.nowPlayingContainer) return;
+    
+    // Clear track state
+    state.nowPlayingState.tracks = {};
     
     if (nowPlaying.length === 0) {
         elements.nowPlayingContainer.innerHTML = 
@@ -623,30 +722,71 @@ function updateNowPlaying(data) {
     elements.nowPlayingContainer.innerHTML = html;
 }
 
+function syncTrackPositions(nowPlaying) {
+    var now = Date.now();
+    
+    nowPlaying.forEach(function(track) {
+        var guildId = track.guild_id || '';
+        var playback = track.playback_state || {};
+        
+        var positionRaw = (playback.position && playback.position.raw) ? playback.position.raw : 0;
+        var durationRaw = (playback.duration && playback.duration.raw) ? playback.duration.raw : 0;
+        var isPaused = playback.paused === true;
+        var connected = playback.connected !== false;
+        
+        // Update or create track state
+        state.nowPlayingState.tracks[guildId] = {
+            position: positionRaw,
+            duration: durationRaw,
+            lastUpdate: now,
+            isPlaying: connected && !isPaused,
+            isPaused: isPaused,
+        };
+    });
+    
+    // Remove tracks yang sudah tidak ada
+    var activeGuildIds = nowPlaying.map(function(t) { return t.guild_id || ''; });
+    Object.keys(state.nowPlayingState.tracks).forEach(function(guildId) {
+        if (activeGuildIds.indexOf(guildId) === -1) {
+            delete state.nowPlayingState.tracks[guildId];
+        }
+    });
+}
+
 function createNowPlayingCard(track, index) {
     var meta = track.metadata || {};
     var playback = track.playback_state || {};
+    var guildId = track.guild_id || 'unknown-' + index;
     
     var title = meta.title || 'Unknown Title';
     var author = meta.author || 'Unknown Artist';
     var artwork = meta.artwork_url || 'https://via.placeholder.com/90/1a1a25/6366f1?text=♪';
     var source = meta.source || 'unknown';
     
-    var position = (playback.position && playback.position.raw) ? playback.position.raw : 0;
-    var duration = (playback.duration && playback.duration.raw) ? playback.duration.raw : 1;
-    var progress = Math.min((position / duration) * 100, 100);
+    var positionRaw = (playback.position && playback.position.raw) ? playback.position.raw : 0;
+    var durationRaw = (playback.duration && playback.duration.raw) ? playback.duration.raw : 1;
+    var progress = Math.min((positionRaw / durationRaw) * 100, 100);
     
-    var currentTime = formatTimestamp(playback.position ? playback.position.stamp : null);
-    var totalTime = formatTimestamp(playback.duration ? playback.duration.stamp : null);
+    var currentTime = formatDuration(positionRaw);
+    var totalTime = formatDuration(durationRaw);
     var ping = playback.ping || '--';
     var connected = playback.connected !== false;
-    var guildId = track.guild_id || '';
+    var isPaused = playback.paused === true;
     
-    return '<div class="now-playing-card animate-fade-in-up" style="animation-delay: ' + (index * 0.1) + 's">' +
+    // Store initial state
+    state.nowPlayingState.tracks[guildId] = {
+        position: positionRaw,
+        duration: durationRaw,
+        lastUpdate: Date.now(),
+        isPlaying: connected && !isPaused,
+        isPaused: isPaused,
+    };
+    
+    return '<div class="now-playing-card animate-fade-in-up" data-guild-id="' + escapeHtml(guildId) + '" style="animation-delay: ' + (index * 0.1) + 's">' +
         '<div class="np-header">' +
             '<div class="np-artwork">' +
                 '<img src="' + escapeHtml(artwork) + '" alt="Artwork" onerror="this.src=\'https://via.placeholder.com/90/1a1a25/6366f1?text=♪\'">' +
-                '<div class="np-playing-indicator"><i class="fas fa-play"></i></div>' +
+                '<div class="np-playing-indicator"><i class="fas ' + (isPaused ? 'fa-pause' : 'fa-play') + '"></i></div>' +
             '</div>' +
             '<div class="np-info">' +
                 '<h4 class="np-title" title="' + escapeHtml(title) + '">' + escapeHtml(title) + '</h4>' +
@@ -656,16 +796,19 @@ function createNowPlayingCard(track, index) {
         '</div>' +
         '<div class="np-progress">' +
             '<div class="progress-bar"><div class="progress-fill" style="width: ' + progress + '%"></div></div>' +
-            '<div class="progress-time"><span>' + currentTime + '</span><span>' + totalTime + '</span></div>' +
+            '<div class="progress-time">' +
+                '<span class="progress-current">' + currentTime + '</span>' +
+                '<span class="progress-total">' + totalTime + '</span>' +
+            '</div>' +
         '</div>' +
         '<div class="np-footer">' +
             '<div class="np-stats">' +
                 '<span class="np-stat"><i class="fas fa-signal"></i> ' + ping + '</span>' +
-                '<span class="np-stat"><i class="fas fa-server"></i> ' + (guildId ? '...' + guildId.slice(-6) : '--') + '</span>' +
+                '<span class="np-stat"><i class="fas fa-server"></i> ' + (guildId && guildId.length > 6 ? '...' + guildId.slice(-6) : guildId) + '</span>' +
             '</div>' +
             '<span class="np-status ' + (connected ? 'connected' : 'disconnected') + '">' +
                 '<i class="fas fa-' + (connected ? 'check-circle' : 'times-circle') + '"></i> ' +
-                (connected ? 'Connected' : 'Disconnected') +
+                (isPaused ? 'Paused' : (connected ? 'Playing' : 'Disconnected')) +
             '</span>' +
         '</div>' +
     '</div>';
@@ -689,7 +832,7 @@ function getSourceIcon(source) {
 }
 
 // ============================================
-// SOURCES PAGE (Load Once) - FIXED STRUCTURE
+// SOURCES PAGE
 // ============================================
 function updateSources(data) {
     if (!elements.sourcesGrid) return;
@@ -713,9 +856,7 @@ function updateSources(data) {
     var html = '';
     sorted.forEach(function(source, i) {
         var info = getSourceInfo(source);
-        // FIXED: Structure now matches Audio Filters - checkmark in header (top right)
         html += '<div class="source-card animate-fade-in-up" style="animation-delay: ' + (i * 0.03) + 's">' +
-            // Header: Icon + Name on LEFT, Checkmark on RIGHT (same as filter-header)
             '<div class="source-header">' +
                 '<div class="source-title">' +
                     '<div class="source-icon ' + info.iconClass + '"><i class="' + info.icon + '"></i></div>' +
@@ -723,9 +864,7 @@ function updateSources(data) {
                 '</div>' +
                 '<div class="source-check"><i class="fas fa-check"></i></div>' +
             '</div>' +
-            // Description
             '<p class="source-description">' + escapeHtml(info.description) + '</p>' +
-            // Status at bottom
             '<span class="source-status">Available</span>' +
         '</div>';
     });
@@ -791,7 +930,7 @@ function getSourceInfo(source) {
 }
 
 // ============================================
-// FILTERS PAGE (Load Once)
+// FILTERS PAGE
 // ============================================
 function updateFilters(data) {
     if (!elements.filtersGrid) return;
@@ -896,7 +1035,6 @@ function initCharts() {
         },
     };
     
-    // CPU Chart
     var cpuEl = document.getElementById('cpuChart');
     if (cpuEl) {
         state.charts.cpu = new Chart(cpuEl.getContext('2d'), {
@@ -928,7 +1066,6 @@ function initCharts() {
         });
     }
     
-    // Memory Chart (Doughnut)
     var memEl = document.getElementById('memoryChart');
     if (memEl) {
         state.charts.memory = new Chart(memEl.getContext('2d'), {
@@ -960,7 +1097,6 @@ function initCharts() {
         });
     }
     
-    // Players Chart (Bar)
     var playersEl = document.getElementById('playersChart');
     if (playersEl) {
         state.charts.players = new Chart(playersEl.getContext('2d'), {
@@ -987,7 +1123,6 @@ function initCharts() {
         });
     }
     
-    // Frame Chart
     var frameEl = document.getElementById('frameChart');
     if (frameEl) {
         state.charts.frame = new Chart(frameEl.getContext('2d'), {
@@ -1010,7 +1145,6 @@ function initCharts() {
         });
     }
     
-    // Uptime/Response Chart
     var uptimeEl = document.getElementById('uptimeChart');
     if (uptimeEl) {
         state.charts.uptime = new Chart(uptimeEl.getContext('2d'), {
@@ -1045,7 +1179,6 @@ function updateCharts(data, responseTime) {
     var players = audioStats.players || {};
     var frames = audioStats.frame_analysis || {};
     
-    // CPU
     if (state.charts.cpu) {
         var sys = Math.min(parsePercentage(cpu.system_load), 100);
         var lava = Math.min(parsePercentage(cpu.lavalink_load), 100);
@@ -1054,14 +1187,12 @@ function updateCharts(data, responseTime) {
         state.charts.cpu.update('none');
     }
     
-    // Memory
     if (state.charts.memory) {
         var usage = parsePercentage(memory.usage_percent);
         state.charts.memory.data.datasets[0].data = [usage, 100 - usage];
         state.charts.memory.update('none');
     }
     
-    // Players
     if (state.charts.players) {
         var total = players.total || 0;
         var playing = players.playing || 0;
@@ -1070,13 +1201,11 @@ function updateCharts(data, responseTime) {
         state.charts.players.update('none');
     }
     
-    // Frame
     if (state.charts.frame) {
         pushData(state.charts.frame.data.datasets[0].data, parsePercentage(frames.integrity));
         state.charts.frame.update('none');
     }
     
-    // Uptime
     if (state.charts.uptime) {
         var time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         pushData(state.charts.uptime.data.labels, time);
@@ -1162,12 +1291,10 @@ function initFAQ() {
             var item = btn.closest('.faq-item');
             var wasActive = item.classList.contains('active');
             
-            // Close all
             document.querySelectorAll('.faq-item.active').forEach(function(i) {
                 i.classList.remove('active');
             });
             
-            // Toggle current
             if (!wasActive) item.classList.add('active');
         });
     });
@@ -1187,7 +1314,6 @@ function initFeedbackForm() {
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             btn.disabled = true;
             
-            // Simulate submission
             setTimeout(function() {
                 showToast('Feedback Sent!', 'Thank you for your feedback. We appreciate it!', 'success');
                 e.target.reset();
@@ -1312,14 +1438,17 @@ document.addEventListener('touchmove', function(e) {
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
         stopAutoRefresh();
+        stopProgressTimer(); // NEW: Stop progress timer too
     } else {
         fetchData();
         startAutoRefresh();
+        startProgressTimer(); // NEW: Restart progress timer
     }
 });
 
 window.addEventListener('beforeunload', function() {
     stopAutoRefresh();
+    stopProgressTimer(); // NEW: Clean up progress timer
 });
 
 // ============================================
@@ -1334,6 +1463,8 @@ window.dashboard = {
     refreshFilters: refreshFilters,
     startAutoRefresh: startAutoRefresh,
     stopAutoRefresh: stopAutoRefresh,
+    startProgressTimer: startProgressTimer,
+    stopProgressTimer: stopProgressTimer,
 };
 
-console.log('📜 app.js loaded successfully');
+console.log('📜 app.js v4.24.0 loaded successfully');
