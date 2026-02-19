@@ -52,15 +52,15 @@ function initElements() {
         sidebarCloseMobile: document.getElementById('sidebarCloseMobile'),
         mobileMenuBtn: document.getElementById('mobileMenuBtn'),
         navItems: document.querySelectorAll('.nav-item:not(.special-nav-item)'),
-        
+
         // Theme
         themeToggle: document.getElementById('themeToggle'),
         themeToggleMobile: document.getElementById('themeToggleMobile'),
         themeNavItem: document.getElementById('themeNavItem'),
-        
+
         // Pages
         pages: document.querySelectorAll('.page'),
-        
+
         // Dashboard
         apiStatusIndicator: document.getElementById('apiStatusIndicator'),
         lastUpdated: document.getElementById('lastUpdated'),
@@ -70,11 +70,11 @@ function initElements() {
         healthGrade: document.getElementById('healthGrade'),
         healthScore: document.getElementById('healthScore'),
         uptime: document.getElementById('uptime'),
-        
+
         // Now Playing
         nowPlayingContainer: document.getElementById('nowPlayingContainer'),
         playingCount: document.getElementById('playingCount'),
-        
+
         // Quick Stats
         totalPlayers: document.getElementById('totalPlayers'),
         activePlaying: document.getElementById('activePlaying'),
@@ -84,7 +84,7 @@ function initElements() {
         activeBar: document.getElementById('activeBar'),
         idleBar: document.getElementById('idleBar'),
         frameBar: document.getElementById('frameBar'),
-        
+
         // Stats Page
         cpuSystemLoad: document.getElementById('cpuSystemLoad'),
         cpuLavalinkLoad: document.getElementById('cpuLavalinkLoad'),
@@ -100,18 +100,18 @@ function initElements() {
         statFrameStatus: document.getElementById('statFrameStatus'),
         statFrameSent: document.getElementById('statFrameSent'),
         statFrameExpected: document.getElementById('statFrameExpected'),
-        
+
         // Sources & Filters
         sourcesGrid: document.getElementById('sourcesGrid'),
         filtersGrid: document.getElementById('filtersGrid'),
-        
+
         // Commands
         commandSearch: document.getElementById('commandSearch'),
         commandsContainer: document.getElementById('commandsContainer'),
-        
+
         // Feedback
         feedbackForm: document.getElementById('feedbackForm'),
-        
+
         // Toast
         toastContainer: document.getElementById('toastContainer'),
     };
@@ -125,11 +125,11 @@ function startAutoRefresh() {
         clearInterval(state.refreshInterval);
         state.refreshInterval = null;
     }
-    
-    state.refreshInterval = setInterval(function() {
+
+    state.refreshInterval = setInterval(function () {
         fetchData();
     }, CONFIG.REFRESH_INTERVAL);
-    
+
     console.log('⏱️ Auto-refresh started (' + CONFIG.REFRESH_INTERVAL + 'ms)');
 }
 
@@ -148,11 +148,11 @@ function startProgressTimer() {
     if (state.progressInterval) {
         clearInterval(state.progressInterval);
     }
-    
-    state.progressInterval = setInterval(function() {
+
+    state.progressInterval = setInterval(function () {
         updateProgressLocally();
     }, CONFIG.PROGRESS_UPDATE_INTERVAL);
-    
+
     console.log('⏱️ Progress timer started (' + CONFIG.PROGRESS_UPDATE_INTERVAL + 'ms)');
 }
 
@@ -166,34 +166,34 @@ function stopProgressTimer() {
 
 function updateProgressLocally() {
     var now = Date.now();
-    
-    Object.keys(state.nowPlayingState.tracks).forEach(function(guildId) {
+
+    Object.keys(state.nowPlayingState.tracks).forEach(function (guildId) {
         var track = state.nowPlayingState.tracks[guildId];
-        
+
         if (!track.isPlaying || track.isPaused) return;
-        
+
         var elapsed = now - track.lastUpdate;
         var newPosition = track.position + elapsed;
-        
+
         if (newPosition > track.duration) {
             newPosition = track.duration;
         }
-        
+
         var card = document.querySelector('[data-guild-id="' + guildId + '"]');
         if (!card) return;
-        
+
         var progressFill = card.querySelector('.progress-fill');
         var currentTimeEl = card.querySelector('.progress-current');
-        
+
         if (progressFill) {
             var percent = track.duration > 0 ? (newPosition / track.duration) * 100 : 0;
             progressFill.style.width = percent + '%';
         }
-        
+
         if (currentTimeEl) {
             currentTimeEl.textContent = formatDuration(newPosition);
         }
-        
+
         track.position = newPosition;
         track.lastUpdate = now;
     });
@@ -202,13 +202,13 @@ function updateProgressLocally() {
 // ============================================
 // INITIALIZATION
 // ============================================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('🎵 Al Farrizi Music Bot Dashboard v4.25.0');
     console.log('📡 API:', CONFIG.API_ENDPOINT);
     console.log('💬 Discord Webhook: Enabled (Professional)');
     console.log('⏱️ Refresh Rate:', CONFIG.REFRESH_INTERVAL + 'ms');
     console.log('🎬 Progress Update:', CONFIG.PROGRESS_UPDATE_INTERVAL + 'ms');
-    
+
     initElements();
     initTheme();
     initSidebar();
@@ -216,34 +216,34 @@ document.addEventListener('DOMContentLoaded', function() {
     initCommands();
     initFAQ();
     initFeedbackForm();
-    
+
     waitForChartJS()
-        .then(function() {
+        .then(function () {
             initCharts();
             state.chartsInitialized = true;
             console.log('📊 Charts ready');
         })
-        .catch(function(err) {
+        .catch(function (err) {
             console.warn('⚠️ Charts unavailable:', err.message);
         });
-    
+
     fetchData();
     startAutoRefresh();
     startProgressTimer();
-    
+
     console.log('✅ Dashboard initialized');
 });
 
 function waitForChartJS(timeout) {
     timeout = timeout || 5000;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
         if (typeof Chart !== 'undefined') {
             resolve();
             return;
         }
-        
+
         var start = Date.now();
-        var check = setInterval(function() {
+        var check = setInterval(function () {
             if (typeof Chart !== 'undefined') {
                 clearInterval(check);
                 resolve();
@@ -261,16 +261,16 @@ function waitForChartJS(timeout) {
 function initTheme() {
     var saved = localStorage.getItem('theme') || 'dark';
     setTheme(saved);
-    
+
     if (elements.themeToggle) {
-        elements.themeToggle.addEventListener('click', function(e) {
+        elements.themeToggle.addEventListener('click', function (e) {
             e.preventDefault();
             toggleTheme();
         });
     }
-    
+
     if (elements.themeToggleMobile) {
-        elements.themeToggleMobile.addEventListener('click', function() {
+        elements.themeToggleMobile.addEventListener('click', function () {
             toggleTheme();
         });
     }
@@ -279,19 +279,19 @@ function initTheme() {
 function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
-    
+
     var isDark = theme === 'dark';
     var icon = isDark ? 'fa-moon' : 'fa-sun';
     var text = isDark ? 'Dark Mode' : 'Light Mode';
-    
+
     if (elements.themeToggle) {
         elements.themeToggle.innerHTML = '<i class="fas ' + icon + '"></i><span>' + text + '</span>';
     }
-    
+
     if (elements.themeToggleMobile) {
         elements.themeToggleMobile.innerHTML = '<i class="fas ' + icon + '"></i>';
     }
-    
+
     if (state.chartsInitialized) {
         updateChartsTheme();
     }
@@ -327,15 +327,15 @@ function getChartColors() {
 function initSidebar() {
     var sidebarToggle = document.getElementById('sidebarToggle');
     if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function(e) {
+        sidebarToggle.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            
+
             if (elements.sidebar) {
                 elements.sidebar.classList.toggle('collapsed');
                 var isCollapsed = elements.sidebar.classList.contains('collapsed');
                 localStorage.setItem('sidebarCollapsed', isCollapsed);
-                
+
                 var span = sidebarToggle.querySelector('span');
                 if (span) {
                     span.textContent = isCollapsed ? 'Expand Menu' : 'Collapse Menu';
@@ -343,38 +343,38 @@ function initSidebar() {
             }
         });
     }
-    
+
     if (elements.mobileMenuBtn) {
-        elements.mobileMenuBtn.addEventListener('click', function(e) {
+        elements.mobileMenuBtn.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
             openMobileSidebar();
         });
     }
-    
+
     if (elements.sidebarCloseMobile) {
-        elements.sidebarCloseMobile.addEventListener('click', function(e) {
+        elements.sidebarCloseMobile.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
             closeMobileSidebar();
         });
     }
-    
+
     if (elements.sidebarOverlay) {
-        elements.sidebarOverlay.addEventListener('click', function(e) {
+        elements.sidebarOverlay.addEventListener('click', function (e) {
             e.preventDefault();
             closeMobileSidebar();
         });
     }
-    
-    document.querySelectorAll('.nav-item a').forEach(function(link) {
-        link.addEventListener('click', function() {
+
+    document.querySelectorAll('.nav-item a').forEach(function (link) {
+        link.addEventListener('click', function () {
             if (window.innerWidth <= 992) {
                 closeMobileSidebar();
             }
         });
     });
-    
+
     if (localStorage.getItem('sidebarCollapsed') === 'true' && window.innerWidth > 992) {
         if (elements.sidebar) {
             elements.sidebar.classList.add('collapsed');
@@ -403,56 +403,56 @@ function closeMobileSidebar() {
 // ============================================
 function initNavigation() {
     var navItems = document.querySelectorAll('.nav-item[data-page]');
-    
-    navItems.forEach(function(item) {
-        item.addEventListener('click', function(e) {
+
+    navItems.forEach(function (item) {
+        item.addEventListener('click', function (e) {
             e.preventDefault();
             var page = item.dataset.page;
             if (page) {
                 navigateToPage(page);
-                
+
                 if (window.innerWidth <= 992) {
                     closeMobileSidebar();
                 }
             }
         });
     });
-    
-    window.addEventListener('hashchange', function() {
+
+    window.addEventListener('hashchange', function () {
         var hash = window.location.hash.slice(1) || 'dashboard';
         navigateToPage(hash, false);
     });
-    
+
     var initial = window.location.hash.slice(1) || 'dashboard';
     navigateToPage(initial, false);
 }
 
 function navigateToPage(pageName, updateHash) {
     if (updateHash === undefined) updateHash = true;
-    
+
     state.currentPage = pageName;
-    
-    document.querySelectorAll('.nav-item[data-page]').forEach(function(item) {
+
+    document.querySelectorAll('.nav-item[data-page]').forEach(function (item) {
         item.classList.toggle('active', item.dataset.page === pageName);
     });
-    
-    elements.pages.forEach(function(page) {
+
+    elements.pages.forEach(function (page) {
         var isTarget = page.id === 'page-' + pageName;
         if (isTarget) {
             page.classList.add('active');
             var animatedEls = page.querySelectorAll('.animate-fade-in, .animate-fade-in-up');
-            animatedEls.forEach(function(el, i) {
+            animatedEls.forEach(function (el, i) {
                 el.style.animationDelay = (i * 0.05) + 's';
             });
         } else {
             page.classList.remove('active');
         }
     });
-    
+
     if (updateHash) {
         window.location.hash = pageName;
     }
-    
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -461,7 +461,7 @@ function navigateToPage(pageName, updateHash) {
 // ============================================
 function fetchData() {
     var startTime = performance.now();
-    
+
     fetch(CONFIG.API_ENDPOINT, {
         headers: {
             'ngrok-skip-browser-warning': 'true',
@@ -469,46 +469,46 @@ function fetchData() {
         },
         cache: 'no-store'
     })
-    .then(function(response) {
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        return response.json();
-    })
-    .then(function(json) {
-        var responseTime = Math.round(performance.now() - startTime);
-        
-        var data = json.data || json;
-        var serverResponseTime = data.response_time_ms || responseTime;
-        
-        state.apiData = data;
-        state.isOnline = json.success !== false;
-        state.lastUpdated = new Date();
-        state.fetchCount++;
-        
-        updateDashboard(data, serverResponseTime);
-        updateStats(data);
-        smartUpdateNowPlaying(data);
-        
-        if (!state.sourcesLoaded) {
-            updateSources(data);
-            state.sourcesLoaded = true;
-            console.log('📦 Sources loaded (one-time)');
-        }
-        
-        if (!state.filtersLoaded) {
-            updateFilters(data);
-            state.filtersLoaded = true;
-            console.log('🎛️ Filters loaded (one-time)');
-        }
-        
-        if (state.chartsInitialized) {
-            updateCharts(data, serverResponseTime);
-        }
-    })
-    .catch(function(error) {
-        console.error('❌ Fetch error:', error.message);
-        state.isOnline = false;
-        updateOfflineState();
-    });
+        .then(function (response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function (json) {
+            var responseTime = Math.round(performance.now() - startTime);
+
+            var data = json.data || json;
+            var serverResponseTime = data.response_time_ms || responseTime;
+
+            state.apiData = data;
+            state.isOnline = json.success !== false;
+            state.lastUpdated = new Date();
+            state.fetchCount++;
+
+            updateDashboard(data, serverResponseTime);
+            updateStats(data);
+            smartUpdateNowPlaying(data);
+
+            if (!state.sourcesLoaded) {
+                updateSources(data);
+                state.sourcesLoaded = true;
+                console.log('📦 Sources loaded (one-time)');
+            }
+
+            if (!state.filtersLoaded) {
+                updateFilters(data);
+                state.filtersLoaded = true;
+                console.log('🎛️ Filters loaded (one-time)');
+            }
+
+            if (state.chartsInitialized) {
+                updateCharts(data, serverResponseTime);
+            }
+        })
+        .catch(function (error) {
+            console.error('❌ Fetch error:', error.message);
+            state.isOnline = false;
+            updateOfflineState();
+        });
 }
 
 // ============================================
@@ -544,12 +544,12 @@ function escapeHtml(str) {
 
 function formatDuration(ms) {
     if (!ms || ms < 0) return '0:00';
-    
+
     var totalSeconds = Math.floor(ms / 1000);
     var hours = Math.floor(totalSeconds / 3600);
     var minutes = Math.floor((totalSeconds % 3600) / 60);
     var seconds = totalSeconds % 60;
-    
+
     if (hours > 0) {
         return hours + ':' + padZero(minutes) + ':' + padZero(seconds);
     }
@@ -582,36 +582,36 @@ function updateDashboard(data, responseTime) {
         var statusText = elements.apiStatusIndicator.querySelector('.status-text');
         if (statusText) statusText.textContent = state.isOnline ? 'API Online' : 'API Offline';
     }
-    
+
     safeSetText(elements.lastUpdated, 'Just now');
     safeSetText(elements.apiStatus, state.isOnline ? 'Online' : 'Offline');
     safeSetText(elements.responseTime, responseTime + 'ms');
-    
+
     var serverVersion = data.server && data.server.version ? data.server.version.semver : null;
     safeSetText(elements.serverVersion, serverVersion);
-    
+
     var health = (data.performance && data.performance.health) || {};
     safeSetText(elements.healthGrade, health.grade);
     safeSetText(elements.healthScore, health.score !== undefined ? health.score + '%' : null);
-    
+
     var uptimeFormatted = data.performance && data.performance.uptime ? data.performance.uptime.formatted : null;
     safeSetText(elements.uptime, uptimeFormatted);
-    
+
     var audioStats = data.audio_stats || {};
     var players = audioStats.players || {};
     var total = players.total || 0;
     var playing = players.playing || 0;
     var idle = players.idle !== undefined ? players.idle : (total - playing);
-    
+
     safeSetText(elements.totalPlayers, total.toString());
     safeSetText(elements.activePlaying, playing.toString());
     safeSetText(elements.idlePlayers, idle.toString());
-    
+
     var maxPlayers = Math.max(total, 10);
     safeSetWidth(elements.playersBar, (total / maxPlayers) * 100);
     safeSetWidth(elements.activeBar, total > 0 ? (playing / total) * 100 : 0);
     safeSetWidth(elements.idleBar, total > 0 ? (idle / total) * 100 : 0);
-    
+
     var frames = audioStats.frame_analysis || {};
     var integrity = parsePercentage(frames.integrity);
     safeSetText(elements.frameIntegrity, integrity.toFixed(0) + '%');
@@ -637,20 +637,20 @@ function updateStats(data) {
     var audioStats = data.audio_stats || {};
     var players = audioStats.players || {};
     var frames = audioStats.frame_analysis || {};
-    
+
     safeSetText(elements.cpuSystemLoad, cpu.system_load || '--');
     safeSetText(elements.cpuLavalinkLoad, cpu.lavalink_load || '--');
     safeSetText(elements.cpuCores, cpu.cores ? cpu.cores.toString() : null);
-    
+
     safeSetText(elements.memUsed, memory.used ? memory.used.formatted : null);
     safeSetText(elements.memAllocated, memory.allocated ? memory.allocated.formatted : null);
     safeSetText(elements.memFree, memory.free ? memory.free.formatted : null);
     safeSetText(elements.memUsage, memory.usage_percent);
-    
+
     safeSetText(elements.statTotalPlayers, players.total ? players.total.toString() : '0');
     safeSetText(elements.statPlayingPlayers, players.playing ? players.playing.toString() : '0');
     safeSetText(elements.statIdlePlayers, (players.idle !== undefined ? players.idle : 0).toString());
-    
+
     safeSetText(elements.statFrameIntegrity, frames.integrity);
     safeSetText(elements.statFrameStatus, frames.status);
     safeSetText(elements.statFrameSent, frames.raw ? frames.raw.sent : null);
@@ -662,45 +662,45 @@ function updateStats(data) {
 // ============================================
 function smartUpdateNowPlaying(data) {
     var nowPlaying = data.now_playing || [];
-    
+
     safeSetText(elements.playingCount, nowPlaying.length + ' track' + (nowPlaying.length !== 1 ? 's' : ''));
-    
+
     if (!elements.nowPlayingContainer) return;
-    
-    var currentTrackIds = nowPlaying.map(function(track) {
+
+    var currentTrackIds = nowPlaying.map(function (track) {
         return getTrackId(track);
     }).sort().join(',');
-    
+
     var previousTrackIds = state.nowPlayingState.lastTrackIds.sort().join(',');
     var tracksChanged = currentTrackIds !== previousTrackIds;
-    
+
     if (tracksChanged) {
         console.log('🎵 Tracks changed, rebuilding Now Playing cards');
         rebuildNowPlayingCards(nowPlaying);
-        state.nowPlayingState.lastTrackIds = nowPlaying.map(function(track) {
+        state.nowPlayingState.lastTrackIds = nowPlaying.map(function (track) {
             return getTrackId(track);
         });
     } else {
         updateNowPlayingDynamicData(nowPlaying);
     }
-    
+
     syncTrackPositions(nowPlaying);
 }
 
 function updateNowPlayingDynamicData(nowPlaying) {
-    nowPlaying.forEach(function(track) {
+    nowPlaying.forEach(function (track) {
         var guildId = track.guild_id || '';
         var playback = track.playback_state || {};
-        
+
         var card = document.querySelector('[data-guild-id="' + guildId + '"]');
         if (!card) return;
-        
+
         var ping = playback.ping || '--';
         var pingEl = card.querySelector('.np-ping');
         if (pingEl) {
             pingEl.textContent = ping;
         }
-        
+
         var connected = playback.connected !== false;
         var isPaused = playback.paused === true;
         var statusEl = card.querySelector('.np-status');
@@ -710,7 +710,7 @@ function updateNowPlayingDynamicData(nowPlaying) {
             var statusText = isPaused ? 'Paused' : (connected ? 'Playing' : 'Disconnected');
             statusEl.innerHTML = '<i class="fas ' + statusIcon + '"></i> ' + statusText;
         }
-        
+
         var indicatorEl = card.querySelector('.np-playing-indicator i');
         if (indicatorEl) {
             indicatorEl.className = 'fas ' + (isPaused ? 'fa-pause' : 'fa-play');
@@ -720,20 +720,20 @@ function updateNowPlayingDynamicData(nowPlaying) {
 
 function rebuildNowPlayingCards(nowPlaying) {
     if (!elements.nowPlayingContainer) return;
-    
+
     state.nowPlayingState.tracks = {};
-    
+
     if (nowPlaying.length === 0) {
-        elements.nowPlayingContainer.innerHTML = 
+        elements.nowPlayingContainer.innerHTML =
             '<div class="empty-state">' +
-                '<i class="fas fa-music"></i>' +
-                '<p>No tracks currently playing</p>' +
+            '<i class="fas fa-music"></i>' +
+            '<p>No tracks currently playing</p>' +
             '</div>';
         return;
     }
-    
+
     var html = '';
-    nowPlaying.forEach(function(track, i) {
+    nowPlaying.forEach(function (track, i) {
         html += createNowPlayingCard(track, i);
     });
     elements.nowPlayingContainer.innerHTML = html;
@@ -741,17 +741,17 @@ function rebuildNowPlayingCards(nowPlaying) {
 
 function syncTrackPositions(nowPlaying) {
     var now = Date.now();
-    
-    nowPlaying.forEach(function(track) {
+
+    nowPlaying.forEach(function (track) {
         var guildId = track.guild_id || '';
         var playback = track.playback_state || {};
-        
+
         var positionRaw = (playback.position && playback.position.raw) ? playback.position.raw : 0;
         var durationRaw = (playback.duration && playback.duration.raw) ? playback.duration.raw : 0;
         var isPaused = playback.paused === true;
         var connected = playback.connected !== false;
         var ping = playback.ping || '--';
-        
+
         state.nowPlayingState.tracks[guildId] = {
             position: positionRaw,
             duration: durationRaw,
@@ -762,9 +762,9 @@ function syncTrackPositions(nowPlaying) {
             connected: connected,
         };
     });
-    
-    var activeGuildIds = nowPlaying.map(function(t) { return t.guild_id || ''; });
-    Object.keys(state.nowPlayingState.tracks).forEach(function(guildId) {
+
+    var activeGuildIds = nowPlaying.map(function (t) { return t.guild_id || ''; });
+    Object.keys(state.nowPlayingState.tracks).forEach(function (guildId) {
         if (activeGuildIds.indexOf(guildId) === -1) {
             delete state.nowPlayingState.tracks[guildId];
         }
@@ -775,22 +775,23 @@ function createNowPlayingCard(track, index) {
     var meta = track.metadata || {};
     var playback = track.playback_state || {};
     var guildId = track.guild_id || 'unknown-' + index;
-    
+
     var title = meta.title || 'Unknown Title';
     var author = meta.author || 'Unknown Artist';
     var artwork = meta.artwork_url || 'https://via.placeholder.com/90/1a1a25/6366f1?text=♪';
     var source = meta.source || 'unknown';
-    
+    var trackUri = meta.uri || ''; // URL lagu asli
+
     var positionRaw = (playback.position && playback.position.raw) ? playback.position.raw : 0;
     var durationRaw = (playback.duration && playback.duration.raw) ? playback.duration.raw : 1;
     var progress = Math.min((positionRaw / durationRaw) * 100, 100);
-    
+
     var currentTime = formatDuration(positionRaw);
     var totalTime = formatDuration(durationRaw);
     var ping = playback.ping || '--';
     var connected = playback.connected !== false;
     var isPaused = playback.paused === true;
-    
+
     state.nowPlayingState.tracks[guildId] = {
         position: positionRaw,
         duration: durationRaw,
@@ -800,37 +801,98 @@ function createNowPlayingCard(track, index) {
         ping: ping,
         connected: connected,
     };
-    
-    return '<div class="now-playing-card animate-fade-in-up" data-guild-id="' + escapeHtml(guildId) + '" style="animation-delay: ' + (index * 0.1) + 's">' +
+
+    // Determine if card should be clickable
+    var isClickable = trackUri && trackUri.length > 0;
+    var cardClass = 'now-playing-card animate-fade-in-up' + (isClickable ? ' clickable' : '');
+    var cardAttrs = 'data-guild-id="' + escapeHtml(guildId) + '"';
+
+    if (isClickable) {
+        cardAttrs += ' data-track-url="' + escapeHtml(trackUri) + '"';
+        cardAttrs += ' onclick="openTrackUrl(this)"';
+        cardAttrs += ' title="Click to open in ' + capitalize(source) + '"';
+    }
+
+    return '<div class="' + cardClass + '" ' + cardAttrs + ' style="animation-delay: ' + (index * 0.1) + 's">' +
+        // Clickable overlay indicator
+        (isClickable ? '<div class="np-click-overlay"><i class="fas fa-external-link-alt"></i><span>Open in ' + capitalize(source) + '</span></div>' : '') +
         '<div class="np-header">' +
-            '<div class="np-artwork">' +
-                '<img src="' + escapeHtml(artwork) + '" alt="Artwork" onerror="this.src=\'https://via.placeholder.com/90/1a1a25/6366f1?text=♪\'">' +
-                '<div class="np-playing-indicator"><i class="fas ' + (isPaused ? 'fa-pause' : 'fa-play') + '"></i></div>' +
-            '</div>' +
-            '<div class="np-info">' +
-                '<h4 class="np-title" title="' + escapeHtml(title) + '">' + escapeHtml(title) + '</h4>' +
-                '<p class="np-artist" title="' + escapeHtml(author) + '">' + escapeHtml(author) + '</p>' +
-                '<span class="np-source"><i class="' + getSourceIcon(source) + '"></i> ' + capitalize(source) + '</span>' +
-            '</div>' +
+        '<div class="np-artwork">' +
+        '<img src="' + escapeHtml(artwork) + '" alt="Artwork" onerror="this.src=\'https://via.placeholder.com/90/1a1a25/6366f1?text=♪\'">' +
+        '<div class="np-playing-indicator"><i class="fas ' + (isPaused ? 'fa-pause' : 'fa-play') + '"></i></div>' +
+        '</div>' +
+        '<div class="np-info">' +
+        '<h4 class="np-title" title="' + escapeHtml(title) + '">' + escapeHtml(title) + '</h4>' +
+        '<p class="np-artist" title="' + escapeHtml(author) + '">' + escapeHtml(author) + '</p>' +
+        '<div class="np-source-row">' +
+        '<span class="np-source"><i class="' + getSourceIcon(source) + '"></i> ' + capitalize(source) + '</span>' +
+        (isClickable ? '<span class="np-external-link"><i class="fas fa-external-link-alt"></i></span>' : '') +
+        '</div>' +
+        '</div>' +
         '</div>' +
         '<div class="np-progress">' +
-            '<div class="progress-bar"><div class="progress-fill" style="width: ' + progress + '%"></div></div>' +
-            '<div class="progress-time">' +
-                '<span class="progress-current">' + currentTime + '</span>' +
-                '<span class="progress-total">' + totalTime + '</span>' +
-            '</div>' +
+        '<div class="progress-bar"><div class="progress-fill" style="width: ' + progress + '%"></div></div>' +
+        '<div class="progress-time">' +
+        '<span class="progress-current">' + currentTime + '</span>' +
+        '<span class="progress-total">' + totalTime + '</span>' +
+        '</div>' +
         '</div>' +
         '<div class="np-footer">' +
-            '<div class="np-stats">' +
-                '<span class="np-stat"><i class="fas fa-signal"></i> <span class="np-ping">' + ping + '</span></span>' +
-                '<span class="np-stat"><i class="fas fa-server"></i> ' + (guildId && guildId.length > 6 ? '...' + guildId.slice(-6) : guildId) + '</span>' +
-            '</div>' +
-            '<span class="np-status ' + (connected ? 'connected' : 'disconnected') + '">' +
-                '<i class="fas fa-' + (connected ? 'check-circle' : 'times-circle') + '"></i> ' +
-                (isPaused ? 'Paused' : (connected ? 'Playing' : 'Disconnected')) +
-            '</span>' +
+        '<div class="np-stats">' +
+        '<span class="np-stat"><i class="fas fa-signal"></i> <span class="np-ping">' + ping + '</span></span>' +
+        '<span class="np-stat"><i class="fas fa-server"></i> ' + (guildId && guildId.length > 6 ? '...' + guildId.slice(-6) : guildId) + '</span>' +
         '</div>' +
-    '</div>';
+        '<span class="np-status ' + (connected ? 'connected' : 'disconnected') + '">' +
+        '<i class="fas fa-' + (connected ? 'check-circle' : 'times-circle') + '"></i> ' +
+        (isPaused ? 'Paused' : (connected ? 'Playing' : 'Disconnected')) +
+        '</span>' +
+        '</div>' +
+        '</div>';
+}
+
+// ============================================
+// OPEN TRACK URL FUNCTION
+// ============================================
+function openTrackUrl(element) {
+    var trackUrl = element.getAttribute('data-track-url');
+
+    if (trackUrl && trackUrl.length > 0) {
+        // Add click animation
+        element.classList.add('clicking');
+
+        setTimeout(function () {
+            element.classList.remove('clicking');
+        }, 300);
+
+        // Open in new tab
+        window.open(trackUrl, '_blank', 'noopener,noreferrer');
+
+        // Show toast notification
+        var source = getSourceFromUrl(trackUrl);
+        showToast('Opening Track', 'Redirecting to ' + source + '...', 'info');
+    }
+}
+
+// ============================================
+// GET SOURCE NAME FROM URL
+// ============================================
+function getSourceFromUrl(url) {
+    if (!url) return 'Source';
+
+    var lowerUrl = url.toLowerCase();
+
+    if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'YouTube';
+    if (lowerUrl.includes('spotify.com')) return 'Spotify';
+    if (lowerUrl.includes('soundcloud.com')) return 'SoundCloud';
+    if (lowerUrl.includes('deezer.com')) return 'Deezer';
+    if (lowerUrl.includes('music.apple.com')) return 'Apple Music';
+    if (lowerUrl.includes('tidal.com')) return 'Tidal';
+    if (lowerUrl.includes('twitch.tv')) return 'Twitch';
+    if (lowerUrl.includes('bandcamp.com')) return 'Bandcamp';
+    if (lowerUrl.includes('vimeo.com')) return 'Vimeo';
+    if (lowerUrl.includes('mixcloud.com')) return 'Mixcloud';
+
+    return 'Source';
 }
 
 function getSourceIcon(source) {
@@ -855,39 +917,39 @@ function getSourceIcon(source) {
 // ============================================
 function updateSources(data) {
     if (!elements.sourcesGrid) return;
-    
+
     var capabilities = data.server && data.server.capabilities;
     var sources = (capabilities && capabilities.sources) || [];
-    
+
     if (sources.length === 0) {
-        elements.sourcesGrid.innerHTML = 
+        elements.sourcesGrid.innerHTML =
             '<div class="empty-state">' +
-                '<i class="fas fa-plug"></i>' +
-                '<p>No sources available</p>' +
+            '<i class="fas fa-plug"></i>' +
+            '<p>No sources available</p>' +
             '</div>';
         return;
     }
-    
-    var sorted = sources.slice().sort(function(a, b) {
+
+    var sorted = sources.slice().sort(function (a, b) {
         return a.localeCompare(b);
     });
-    
+
     var html = '';
-    sorted.forEach(function(source, i) {
+    sorted.forEach(function (source, i) {
         var info = getSourceInfo(source);
         html += '<div class="source-card animate-fade-in-up" style="animation-delay: ' + (i * 0.03) + 's">' +
             '<div class="source-header">' +
-                '<div class="source-title">' +
-                    '<div class="source-icon ' + info.iconClass + '"><i class="' + info.icon + '"></i></div>' +
-                    '<span class="source-name">' + escapeHtml(info.name) + '</span>' +
-                '</div>' +
-                '<div class="source-check"><i class="fas fa-check"></i></div>' +
+            '<div class="source-title">' +
+            '<div class="source-icon ' + info.iconClass + '"><i class="' + info.icon + '"></i></div>' +
+            '<span class="source-name">' + escapeHtml(info.name) + '</span>' +
+            '</div>' +
+            '<div class="source-check"><i class="fas fa-check"></i></div>' +
             '</div>' +
             '<p class="source-description">' + escapeHtml(info.description) + '</p>' +
             '<span class="source-status">Available</span>' +
-        '</div>';
+            '</div>';
     });
-    
+
     elements.sourcesGrid.innerHTML = html;
 }
 
@@ -934,12 +996,12 @@ function getSourceInfo(source) {
         songlink: { name: 'Songlink', icon: 'fas fa-link', iconClass: 'default', description: 'Universal music link resolver' },
         eternalbox: { name: 'Eternal Box', icon: 'fas fa-infinity', iconClass: 'default', description: 'Infinite jukebox for songs' },
     };
-    
+
     var key = source.toLowerCase().replace(/[-_\s]/g, '');
     var info = map[key];
-    
+
     if (info) return info;
-    
+
     return {
         name: capitalize(source.replace(/[-_]/g, ' ')),
         icon: 'fas fa-music',
@@ -953,35 +1015,35 @@ function getSourceInfo(source) {
 // ============================================
 function updateFilters(data) {
     if (!elements.filtersGrid) return;
-    
+
     var capabilities = data.server && data.server.capabilities;
     var filters = (capabilities && capabilities.filters) || [];
-    
+
     if (filters.length === 0) {
-        elements.filtersGrid.innerHTML = 
+        elements.filtersGrid.innerHTML =
             '<div class="empty-state">' +
-                '<i class="fas fa-sliders-h"></i>' +
-                '<p>No filters available</p>' +
+            '<i class="fas fa-sliders-h"></i>' +
+            '<p>No filters available</p>' +
             '</div>';
         return;
     }
-    
-    var sorted = filters.slice().sort(function(a, b) {
+
+    var sorted = filters.slice().sort(function (a, b) {
         return a.localeCompare(b);
     });
-    
+
     var html = '';
-    sorted.forEach(function(filter, i) {
+    sorted.forEach(function (filter, i) {
         var info = getFilterInfo(filter);
         html += '<div class="filter-card animate-fade-in-up" style="animation-delay: ' + (i * 0.03) + 's">' +
             '<div class="filter-header">' +
-                '<span class="filter-name">' + escapeHtml(info.name) + '</span>' +
-                '<div class="filter-check"><i class="fas fa-check"></i></div>' +
+            '<span class="filter-name">' + escapeHtml(info.name) + '</span>' +
+            '<div class="filter-check"><i class="fas fa-check"></i></div>' +
             '</div>' +
             '<p class="filter-description">' + escapeHtml(info.description) + '</p>' +
-        '</div>';
+            '</div>';
     });
-    
+
     elements.filtersGrid.innerHTML = html;
 }
 
@@ -1007,12 +1069,12 @@ function getFilterInfo(filter) {
         vaporwave: { name: 'Vaporwave', description: 'Slow down audio with lower pitch for vaporwave effect' },
         '8d': { name: '8D Audio', description: 'Create rotating spatial audio effect around listener' },
     };
-    
+
     var key = filter.toLowerCase();
     var info = map[key];
-    
+
     if (info) return info;
-    
+
     return {
         name: capitalize(filter.replace(/[-_]/g, ' ')),
         description: 'Audio processing filter for enhanced sound'
@@ -1024,9 +1086,9 @@ function getFilterInfo(filter) {
 // ============================================
 function initCharts() {
     if (typeof Chart === 'undefined') return;
-    
+
     var colors = getChartColors();
-    
+
     var lineDefaults = {
         responsive: true,
         maintainAspectRatio: false,
@@ -1053,7 +1115,7 @@ function initCharts() {
             line: { tension: 0.4, borderWidth: 2 },
         },
     };
-    
+
     var cpuEl = document.getElementById('cpuChart');
     if (cpuEl) {
         state.charts.cpu = new Chart(cpuEl.getContext('2d'), {
@@ -1084,7 +1146,7 @@ function initCharts() {
             }),
         });
     }
-    
+
     var memEl = document.getElementById('memoryChart');
     if (memEl) {
         state.charts.memory = new Chart(memEl.getContext('2d'), {
@@ -1106,7 +1168,7 @@ function initCharts() {
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: function(ctx) {
+                            label: function (ctx) {
                                 return ctx.label + ': ' + ctx.raw.toFixed(1) + '%';
                             }
                         }
@@ -1115,7 +1177,7 @@ function initCharts() {
             },
         });
     }
-    
+
     var playersEl = document.getElementById('playersChart');
     if (playersEl) {
         state.charts.players = new Chart(playersEl.getContext('2d'), {
@@ -1141,7 +1203,7 @@ function initCharts() {
             },
         });
     }
-    
+
     var frameEl = document.getElementById('frameChart');
     if (frameEl) {
         state.charts.frame = new Chart(frameEl.getContext('2d'), {
@@ -1163,7 +1225,7 @@ function initCharts() {
             }),
         });
     }
-    
+
     var uptimeEl = document.getElementById('uptimeChart');
     if (uptimeEl) {
         state.charts.uptime = new Chart(uptimeEl.getContext('2d'), {
@@ -1191,13 +1253,13 @@ function initCharts() {
 
 function updateCharts(data, responseTime) {
     if (!state.chartsInitialized) return;
-    
+
     var cpu = (data.performance && data.performance.cpu) || {};
     var memory = (data.performance && data.performance.memory) || {};
     var audioStats = data.audio_stats || {};
     var players = audioStats.players || {};
     var frames = audioStats.frame_analysis || {};
-    
+
     if (state.charts.cpu) {
         var sys = Math.min(parsePercentage(cpu.system_load), 100);
         var lava = Math.min(parsePercentage(cpu.lavalink_load), 100);
@@ -1205,13 +1267,13 @@ function updateCharts(data, responseTime) {
         pushData(state.charts.cpu.data.datasets[1].data, lava);
         state.charts.cpu.update('none');
     }
-    
+
     if (state.charts.memory) {
         var usage = parsePercentage(memory.usage_percent);
         state.charts.memory.data.datasets[0].data = [usage, 100 - usage];
         state.charts.memory.update('none');
     }
-    
+
     if (state.charts.players) {
         var total = players.total || 0;
         var playing = players.playing || 0;
@@ -1219,12 +1281,12 @@ function updateCharts(data, responseTime) {
         state.charts.players.data.datasets[0].data = [total, playing, idle];
         state.charts.players.update('none');
     }
-    
+
     if (state.charts.frame) {
         pushData(state.charts.frame.data.datasets[0].data, parsePercentage(frames.integrity));
         state.charts.frame.update('none');
     }
-    
+
     if (state.charts.uptime) {
         var time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         pushData(state.charts.uptime.data.labels, time);
@@ -1240,11 +1302,11 @@ function pushData(arr, value) {
 
 function updateChartsTheme() {
     var colors = getChartColors();
-    
-    Object.keys(state.charts).forEach(function(key) {
+
+    Object.keys(state.charts).forEach(function (key) {
         var chart = state.charts[key];
         if (chart && chart.options && chart.options.scales) {
-            ['x', 'y'].forEach(function(axis) {
+            ['x', 'y'].forEach(function (axis) {
                 var scale = chart.options.scales[axis];
                 if (scale) {
                     if (scale.grid) scale.grid.color = colors.grid;
@@ -1261,20 +1323,20 @@ function updateChartsTheme() {
 // ============================================
 function initCommands() {
     if (elements.commandSearch) {
-        elements.commandSearch.addEventListener('input', function(e) {
+        elements.commandSearch.addEventListener('input', function (e) {
             filterCommands(e.target.value.toLowerCase().trim());
         });
     }
-    
-    document.querySelectorAll('.copy-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+
+    document.querySelectorAll('.copy-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
             var cmd = btn.dataset.command;
             copyToClipboard(cmd);
-            
+
             btn.innerHTML = '<i class="fas fa-check"></i>';
             btn.classList.add('copied');
-            
-            setTimeout(function() {
+
+            setTimeout(function () {
                 btn.innerHTML = '<i class="fas fa-copy"></i>';
                 btn.classList.remove('copied');
             }, 2000);
@@ -1283,20 +1345,20 @@ function initCommands() {
 }
 
 function filterCommands(query) {
-    document.querySelectorAll('.command-category').forEach(function(cat) {
+    document.querySelectorAll('.command-category').forEach(function (cat) {
         var visible = false;
-        
-        cat.querySelectorAll('.command-item').forEach(function(item) {
+
+        cat.querySelectorAll('.command-item').forEach(function (item) {
             var codeEl = item.querySelector('code');
             var descEl = item.querySelector('p');
             var code = codeEl ? codeEl.textContent.toLowerCase() : '';
             var desc = descEl ? descEl.textContent.toLowerCase() : '';
             var match = !query || code.indexOf(query) !== -1 || desc.indexOf(query) !== -1;
-            
+
             item.style.display = match ? '' : 'none';
             if (match) visible = true;
         });
-        
+
         cat.style.display = visible ? '' : 'none';
     });
 }
@@ -1305,15 +1367,15 @@ function filterCommands(query) {
 // FAQ
 // ============================================
 function initFAQ() {
-    document.querySelectorAll('.faq-question').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+    document.querySelectorAll('.faq-question').forEach(function (btn) {
+        btn.addEventListener('click', function () {
             var item = btn.closest('.faq-item');
             var wasActive = item.classList.contains('active');
-            
-            document.querySelectorAll('.faq-item.active').forEach(function(i) {
+
+            document.querySelectorAll('.faq-item.active').forEach(function (i) {
                 i.classList.remove('active');
             });
-            
+
             if (!wasActive) item.classList.add('active');
         });
     });
@@ -1324,7 +1386,7 @@ function initFAQ() {
 // ============================================
 function initFeedbackForm() {
     if (elements.feedbackForm) {
-        elements.feedbackForm.addEventListener('submit', function(e) {
+        elements.feedbackForm.addEventListener('submit', function (e) {
             e.preventDefault();
             submitFeedbackToDiscord(e.target);
         });
@@ -1334,81 +1396,81 @@ function initFeedbackForm() {
 function submitFeedbackToDiscord(form) {
     var btn = form.querySelector('.submit-btn');
     var originalHTML = btn.innerHTML;
-    
+
     // Get form data
     var nameInput = form.querySelector('input[type="text"], input[name="name"], #feedbackName');
     var emailInput = form.querySelector('input[type="email"], input[name="email"], #feedbackEmail');
     var typeSelect = form.querySelector('select, #feedbackType');
     var messageTextarea = form.querySelector('textarea, #feedbackMessage');
     var agreeCheckbox = form.querySelector('input[type="checkbox"], #feedbackAgree');
-    
+
     var name = nameInput ? nameInput.value.trim() : '';
     var email = emailInput ? emailInput.value.trim() : '';
     var feedbackType = typeSelect ? typeSelect.value : 'general';
     var message = messageTextarea ? messageTextarea.value.trim() : '';
     var hasAgreed = agreeCheckbox ? agreeCheckbox.checked : false;
-    
+
     // ============================================
     // VALIDATION
     // ============================================
-    
+
     // Name validation
     if (!name) {
         showToast('Missing Name', 'Please enter your name', 'error');
         if (nameInput) nameInput.focus();
         return;
     }
-    
+
     if (name.length < 2) {
         showToast('Invalid Name', 'Name must be at least 2 characters', 'error');
         if (nameInput) nameInput.focus();
         return;
     }
-    
+
     // Email validation
     if (!email) {
         showToast('Missing Email', 'Please enter your email address', 'error');
         if (emailInput) emailInput.focus();
         return;
     }
-    
+
     if (!isValidEmail(email)) {
         showToast('Invalid Email', 'Please enter a valid email address (e.g., user@example.com)', 'error');
         if (emailInput) emailInput.focus();
         return;
     }
-    
+
     // Message validation
     if (!message) {
         showToast('Missing Message', 'Please enter your feedback message', 'error');
         if (messageTextarea) messageTextarea.focus();
         return;
     }
-    
+
     if (message.length < 10) {
         showToast('Message Too Short', 'Please provide more details (at least 10 characters)', 'error');
         if (messageTextarea) messageTextarea.focus();
         return;
     }
-    
+
     // Agreement checkbox validation
     if (!hasAgreed) {
         showToast('Agreement Required', 'Please agree to be contacted regarding this feedback', 'warning');
         if (agreeCheckbox) agreeCheckbox.focus();
         return;
     }
-    
+
     // ============================================
     // UPDATE BUTTON STATE
     // ============================================
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
     btn.disabled = true;
-    
+
     // Get feedback type info
     var typeInfo = getFeedbackTypeInfo(feedbackType);
     var deviceInfo = getDeviceInfo();
     var timestamp = Math.floor(Date.now() / 1000);
-    
+
     // ============================================
     // BUILD PROFESSIONAL DISCORD EMBED
     // ============================================
@@ -1471,7 +1533,7 @@ function submitFeedbackToDiscord(form) {
         },
         timestamp: new Date().toISOString()
     };
-    
+
     // Webhook payload
     var payload = {
         username: 'Al Farrizi Feedback Bot',
@@ -1479,7 +1541,7 @@ function submitFeedbackToDiscord(form) {
         content: getWebhookMention(feedbackType),
         embeds: [embed]
     };
-    
+
     // ============================================
     // SEND TO DISCORD WEBHOOK
     // ============================================
@@ -1490,23 +1552,23 @@ function submitFeedbackToDiscord(form) {
         },
         body: JSON.stringify(payload)
     })
-    .then(function(response) {
-        if (response.ok || response.status === 204) {
-            showToast('Feedback Sent! ✨', 'Thank you ' + name + '! We\'ll get back to you soon.', 'success');
-            form.reset();
-            console.log('✅ Feedback sent to Discord successfully');
-        } else {
-            throw new Error('HTTP ' + response.status);
-        }
-    })
-    .catch(function(error) {
-        console.error('❌ Failed to send feedback:', error);
-        showToast('Oops!', 'Failed to send feedback. Please try again later.', 'error');
-    })
-    .finally(function() {
-        btn.innerHTML = originalHTML;
-        btn.disabled = false;
-    });
+        .then(function (response) {
+            if (response.ok || response.status === 204) {
+                showToast('Feedback Sent! ✨', 'Thank you ' + name + '! We\'ll get back to you soon.', 'success');
+                form.reset();
+                console.log('✅ Feedback sent to Discord successfully');
+            } else {
+                throw new Error('HTTP ' + response.status);
+            }
+        })
+        .catch(function (error) {
+            console.error('❌ Failed to send feedback:', error);
+            showToast('Oops!', 'Failed to send feedback. Please try again later.', 'error');
+        })
+        .finally(function () {
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+        });
 }
 
 // ============================================
@@ -1515,20 +1577,20 @@ function submitFeedbackToDiscord(form) {
 function isValidEmail(email) {
     // Comprehensive email regex pattern
     var regex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-    
+
     if (!regex.test(email)) return false;
-    
+
     // Additional checks
     var parts = email.split('@');
     if (parts.length !== 2) return false;
-    
+
     var domain = parts[1];
     if (!domain.includes('.')) return false;
-    
+
     // Check domain extension is at least 2 characters
     var extension = domain.split('.').pop();
     if (extension.length < 2) return false;
-    
+
     return true;
 }
 
@@ -1537,62 +1599,62 @@ function isValidEmail(email) {
 // ============================================
 function getFeedbackTypeInfo(type) {
     var types = {
-        'general': { 
-            label: 'General Feedback', 
-            emoji: '💭', 
+        'general': {
+            label: 'General Feedback',
+            emoji: '💭',
             color: 0x6366f1,
             priority: 'normal'
         },
-        'bug': { 
-            label: 'Bug Report', 
-            emoji: '🐛', 
+        'bug': {
+            label: 'Bug Report',
+            emoji: '🐛',
             color: 0xef4444,
             priority: 'high'
         },
-        'feature': { 
-            label: 'Feature Request', 
-            emoji: '✨', 
+        'feature': {
+            label: 'Feature Request',
+            emoji: '✨',
             color: 0x10b981,
             priority: 'normal'
         },
-        'suggestion': { 
-            label: 'Suggestion', 
-            emoji: '💡', 
+        'suggestion': {
+            label: 'Suggestion',
+            emoji: '💡',
             color: 0xf59e0b,
             priority: 'normal'
         },
-        'question': { 
-            label: 'Question', 
-            emoji: '❓', 
+        'question': {
+            label: 'Question',
+            emoji: '❓',
             color: 0x3b82f6,
             priority: 'normal'
         },
-        'praise': { 
-            label: 'Praise / Thanks', 
-            emoji: '🎉', 
+        'praise': {
+            label: 'Praise / Thanks',
+            emoji: '🎉',
             color: 0x8b5cf6,
             priority: 'low'
         },
-        'complaint': { 
-            label: 'Complaint', 
-            emoji: '😞', 
+        'complaint': {
+            label: 'Complaint',
+            emoji: '😞',
             color: 0xf97316,
             priority: 'high'
         },
-        'urgent': { 
-            label: 'Urgent Issue', 
-            emoji: '🚨', 
+        'urgent': {
+            label: 'Urgent Issue',
+            emoji: '🚨',
             color: 0xdc2626,
             priority: 'critical'
         },
-        'other': { 
-            label: 'Other', 
-            emoji: '📝', 
+        'other': {
+            label: 'Other',
+            emoji: '📝',
             color: 0x6b7280,
             priority: 'normal'
         }
     };
-    
+
     return types[type] || types['general'];
 }
 
@@ -1616,16 +1678,16 @@ function getPriorityBadge(feedbackType) {
 function getWebhookMention(feedbackType) {
     // Optional: Uncomment and replace with your role ID to ping for urgent/bug reports
     // var urgentRoleId = 'YOUR_ROLE_ID';
-    
+
     var typeInfo = getFeedbackTypeInfo(feedbackType);
-    
+
     if (typeInfo.priority === 'critical') {
         // return '<@&' + urgentRoleId + '> 🚨 **Urgent feedback received!**';
         return '🚨 **Urgent feedback received!**';
     } else if (typeInfo.priority === 'high') {
         return '⚠️ **High priority feedback received!**';
     }
-    
+
     return null; // No content/mention for normal priority
 }
 
@@ -1636,16 +1698,16 @@ function formatMessageForDiscord(message) {
     var maxLength = 1000;
     var truncated = message.length > maxLength;
     var displayMessage = truncated ? message.substring(0, maxLength) : message;
-    
+
     // Escape backticks to prevent markdown issues
     displayMessage = displayMessage.replace(/`/g, "'");
-    
+
     var formatted = '```\n' + displayMessage + (truncated ? '...\n[Message truncated]' : '') + '\n```';
-    
+
     if (truncated) {
         formatted += '\n> ⚠️ *Message was truncated. Full length: ' + message.length + ' characters*';
     }
-    
+
     return formatted;
 }
 
@@ -1658,7 +1720,7 @@ function getDeviceInfo() {
     var browserVersion = '';
     var os = 'Unknown';
     var osVersion = '';
-    
+
     // Detect browser and version
     if (ua.indexOf('Chrome') > -1 && ua.indexOf('Edg') === -1 && ua.indexOf('OPR') === -1) {
         browser = 'Chrome';
@@ -1681,7 +1743,7 @@ function getDeviceInfo() {
         var operaMatch = ua.match(/(?:OPR|Opera)\/(\d+)/);
         if (operaMatch) browserVersion = operaMatch[1];
     }
-    
+
     // Detect OS
     if (ua.indexOf('Windows NT 10') > -1) {
         os = 'Windows';
@@ -1707,14 +1769,14 @@ function getDeviceInfo() {
     } else if (ua.indexOf('Linux') > -1) {
         os = 'Linux';
     }
-    
+
     var screenSize = window.screen.width + 'x' + window.screen.height;
     var viewportSize = window.innerWidth + 'x' + window.innerHeight;
     var deviceType = window.innerWidth <= 768 ? 'Mobile' : (window.innerWidth <= 1024 ? 'Tablet' : 'Desktop');
     var deviceEmoji = window.innerWidth <= 768 ? '📱' : '🖥️';
     var timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown';
     var language = navigator.language || 'Unknown';
-    
+
     // Build full info string
     var fullInfo = [
         'Device    : ' + deviceEmoji + ' ' + deviceType,
@@ -1725,10 +1787,10 @@ function getDeviceInfo() {
         'Timezone  : ' + timezone,
         'Language  : ' + language
     ].join('\n');
-    
+
     // Short version for quick display
     var shortInfo = deviceEmoji + ' ' + deviceType + ' • ' + os + ' • ' + browser;
-    
+
     return {
         full: fullInfo,
         short: shortInfo,
@@ -1743,35 +1805,35 @@ function getDeviceInfo() {
 // ============================================
 function showToast(title, message, type) {
     type = type || 'info';
-    
+
     if (!elements.toastContainer) return;
-    
+
     var icons = {
         success: 'fa-check-circle',
         error: 'fa-times-circle',
         warning: 'fa-exclamation-triangle',
         info: 'fa-info-circle',
     };
-    
+
     var toast = document.createElement('div');
     toast.className = 'toast ' + type;
-    toast.innerHTML = 
+    toast.innerHTML =
         '<div class="toast-icon"><i class="fas ' + (icons[type] || icons.info) + '"></i></div>' +
         '<div class="toast-content">' +
-            '<div class="toast-title">' + escapeHtml(title) + '</div>' +
-            '<div class="toast-message">' + escapeHtml(message) + '</div>' +
+        '<div class="toast-title">' + escapeHtml(title) + '</div>' +
+        '<div class="toast-message">' + escapeHtml(message) + '</div>' +
         '</div>' +
         '<button class="toast-close"><i class="fas fa-times"></i></button>';
-    
+
     elements.toastContainer.appendChild(toast);
-    
-    var closeToast = function() {
+
+    var closeToast = function () {
         toast.classList.add('hide');
-        setTimeout(function() {
+        setTimeout(function () {
             if (toast.parentNode) toast.remove();
         }, 300);
     };
-    
+
     toast.querySelector('.toast-close').addEventListener('click', closeToast);
     setTimeout(closeToast, CONFIG.TOAST_DURATION);
 }
@@ -1782,10 +1844,10 @@ function showToast(title, message, type) {
 function copyToClipboard(text) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text)
-            .then(function() {
+            .then(function () {
                 showToast('Copied!', '"' + text + '" copied to clipboard', 'success');
             })
-            .catch(function() {
+            .catch(function () {
                 fallbackCopy(text);
             });
     } else {
@@ -1799,14 +1861,14 @@ function fallbackCopy(text) {
     ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
     document.body.appendChild(ta);
     ta.select();
-    
+
     try {
         document.execCommand('copy');
         showToast('Copied!', '"' + text + '" copied', 'success');
     } catch (e) {
         showToast('Error', 'Failed to copy', 'error');
     }
-    
+
     ta.remove();
 }
 
@@ -1834,13 +1896,13 @@ function refreshFilters() {
 // ============================================
 // WINDOW EVENTS
 // ============================================
-window.addEventListener('resize', function() {
+window.addEventListener('resize', function () {
     if (window.innerWidth > 992) {
         closeMobileSidebar();
     }
 });
 
-document.addEventListener('touchmove', function(e) {
+document.addEventListener('touchmove', function (e) {
     if (elements.sidebarOverlay && elements.sidebarOverlay.classList.contains('active')) {
         if (elements.sidebar && !elements.sidebar.contains(e.target)) {
             e.preventDefault();
@@ -1848,7 +1910,7 @@ document.addEventListener('touchmove', function(e) {
     }
 }, { passive: false });
 
-document.addEventListener('visibilitychange', function() {
+document.addEventListener('visibilitychange', function () {
     if (document.hidden) {
         stopAutoRefresh();
         stopProgressTimer();
@@ -1859,7 +1921,7 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
-window.addEventListener('beforeunload', function() {
+window.addEventListener('beforeunload', function () {
     stopAutoRefresh();
     stopProgressTimer();
 });
@@ -1880,6 +1942,10 @@ window.dashboard = {
     stopProgressTimer: stopProgressTimer,
     submitFeedbackToDiscord: submitFeedbackToDiscord,
     isValidEmail: isValidEmail,
+    openTrackUrl: openTrackUrl,
 };
+
+// Also expose globally for onclick
+window.openTrackUrl = openTrackUrl;
 
 console.log('📜 app.js v4.25.0 loaded successfully');
