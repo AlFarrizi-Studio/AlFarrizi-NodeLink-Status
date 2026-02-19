@@ -1125,7 +1125,7 @@
             </div>
 
             <div class="feedback-container animate-fade-in-up">
-                <form class="feedback-form" id="feedbackForm">
+                <form class="feedback-form" id="feedbackForm" novalidate>
                     <!-- Name Field -->
                     <div class="form-group">
                         <label for="feedbackName">
@@ -1139,7 +1139,6 @@
                             placeholder="Enter your name"
                             minlength="2"
                             maxlength="100"
-                            required
                             autocomplete="name"
                         >
                     </div>
@@ -1155,7 +1154,6 @@
                             id="feedbackEmail" 
                             name="email"
                             placeholder="your@email.com"
-                            required
                             autocomplete="email"
                         >
                     </div>
@@ -1167,7 +1165,7 @@
                             Feedback Type
                         </label>
                         <div class="select-wrapper">
-                            <select id="feedbackType" name="type" required>
+                            <select id="feedbackType" name="type">
                                 <option value="" disabled selected>Select feedback type...</option>
                                 <option value="general">💭 General Feedback</option>
                                 <option value="bug">🐛 Bug Report</option>
@@ -1196,7 +1194,6 @@
                             placeholder="Tell us what's on your mind... Be as detailed as possible."
                             minlength="10"
                             maxlength="2000"
-                            required
                         ></textarea>
                         <div class="textarea-footer">
                             <span></span>
@@ -1206,8 +1203,8 @@
 
                     <!-- Agreement Checkbox -->
                     <div class="form-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="feedbackAgree" name="agree" required>
+                        <label class="checkbox-label" for="feedbackAgree">
+                            <input type="checkbox" id="feedbackAgree" name="agree">
                             <span class="custom-checkbox">
                                 <i class="fas fa-check"></i>
                             </span>
@@ -1317,4 +1314,5 @@
     </script>
 </body>
 </html>
+
 
