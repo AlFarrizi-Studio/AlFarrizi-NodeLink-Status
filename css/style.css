@@ -6230,5 +6230,36 @@ ul {
 }
 
 /* ============================================
+   SITE FOOTER
+   ============================================ */
+
+.site-footer {
+    width: 100%;
+    padding: 24px 32px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    margin-top: auto;
+}
+
+.footer-content p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+}
+
+@media (max-width: 768px) {
+    .site-footer {
+        padding: 20px 16px;
+    }
+
+    .footer-content p {
+        font-size: 13px;
+    }
+}
+
+/* ============================================
    END OF STYLESHEET
    ============================================ */
